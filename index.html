@@ -1,0 +1,1819 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>المجموعة C</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-deep: #050a18;
+  --bg-grad: radial-gradient(circle at 80% 0%, #162b66 0%, #09122c 45%, #040814 100%);
+  --glass: rgba(16, 28, 60, 0.58);
+  --glass-border: rgba(88, 145, 255, 0.28);
+  --glass-highlight: rgba(130, 180, 255, 0.15);
+  --blue-glow: linear-gradient(135deg, #2589ff 0%, #0052d4 100%);
+  --green-card: linear-gradient(160deg, rgba(16, 130, 75, 0.75) 0%, rgba(10, 60, 40, 0.9) 70%, #10b981 120%);
+  --red-card: linear-gradient(160deg, rgba(155, 35, 55, 0.75) 0%, rgba(75, 18, 30, 0.9) 70%, #ef4444 120%);
+  --orange-card: linear-gradient(160deg, rgba(165, 100, 15, 0.75) 0%, rgba(75, 45, 10, 0.9) 70%, #f59e0b 120%);
+  --purple-card: linear-gradient(160deg, rgba(95, 50, 175, 0.75) 0%, rgba(45, 22, 90, 0.9) 70%, #8b5cf6 120%);
+  --tx: #ffffff;
+  --mu: #94a9d1;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+  margin: 0;
+  background: var(--bg-deep);
+  background-image: var(--bg-grad);
+  background-attachment: fixed;
+  color: var(--tx);
+  font-family: 'Cairo', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  padding-bottom: 66px;
+}
+
+body.locked {
+  padding-bottom: 24px;
+}
+
+/* Gate Screen for Unauthenticated Users */
+.gate-wrap {
+  min-height: 92vh;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+.gate-card {
+  width: 100%;
+  max-width: 390px;
+  padding: 20px 18px;
+}
+.gate-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.gate-head h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+}
+.gate-head p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--mu);
+}
+
+/* Online Presence Bar & Modal */
+.online-pill {
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid rgba(74, 222, 128, 0.45);
+  color: #86efac;
+  border-radius: 11px;
+  padding: 5px 10px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.online-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 8px #22c55e;
+}
+.user-badge {
+  font-size: 11px;
+  color: var(--mu);
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.role-tag {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 8px;
+}
+.role-tag.admin {
+  background: rgba(37, 137, 255, 0.25);
+  border: 1px solid rgba(130, 195, 255, 0.5);
+  color: #93c5fd;
+}
+.role-tag.visitor {
+  background: rgba(148, 163, 184, 0.18);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  color: #cbd5e1;
+}
+
+.app {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 14px 14px 20px;
+}
+
+.hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.hdr-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.logo-box {
+  width: 46px;
+  height: 46px;
+  border-radius: 15px;
+  background: var(--blue-glow);
+  display: grid;
+  place-items: center;
+  flex: none;
+  box-shadow: 0 0 20px rgba(37, 137, 255, 0.45), inset 0 1px 1px rgba(255,255,255,0.4);
+  border: 1px solid rgba(140, 200, 255, 0.5);
+}
+.hdr-title h1 { margin: 0; font-size: 19px; font-weight: 800; line-height: 1.2; }
+.hdr-title p { margin: 1px 0 0; font-size: 11px; color: var(--mu); }
+
+.hdr-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex: none;
+}
+
+.glass-box {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35), inset 0 1px 0 var(--glass-highlight);
+  margin-bottom: 12px;
+}
+
+.top-tabs { display: grid; grid-template-columns: repeat(4, 1fr); padding: 3px; overflow: hidden; margin-bottom: 8px; }
+.top-tab {
+  background: transparent; border: 0; color: var(--mu); font-family: inherit;
+  padding: 5px 3px; border-radius: 12px; display: flex; flex-direction: column;
+  align-items: center; gap: 2px; font-size: 10px; font-weight: 600;
+  cursor: pointer; position: relative; transition: 0.2s;
+}
+.top-tab svg { width: 16px; height: 16px; }
+.top-tab:not(:last-child)::after {
+  content: ''; position: absolute; left: 0; top: 20%; height: 60%; width: 1px;
+  background: rgba(120, 160, 255, 0.15);
+}
+.top-tab.on {
+  background: var(--blue-glow); color: #fff;
+  box-shadow: 0 4px 16px rgba(20, 120, 255, 0.45), inset 0 1px 1px rgba(255,255,255,0.4);
+}
+.top-tab.on::after { display: none; }
+
+.news-bar {
+  padding: 5px 10px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+}
+.news-badge {
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  border: 1px solid rgba(147, 197, 253, 0.5);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  box-shadow: 0 0 12px rgba(14, 165, 233, 0.35);
+}
+.ticker-wrap {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  height: 24px;
+  display: flex;
+  align-items: center;
+}
+.ticker-track {
+  display: inline-block;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  color: #e2e8f0;
+  padding-right: 100%;
+  animation: ticker-rtl 18s linear infinite;
+}
+.news-bar:hover .ticker-track {
+  animation-play-state: paused;
+}
+@keyframes ticker-rtl {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(100%); }
+}
+.news-edit-btn {
+  background: rgba(37, 137, 255, 0.22);
+  border: 1px solid rgba(96, 165, 250, 0.45);
+  color: #93c5fd;
+  border-radius: 9px;
+  padding: 4px 8px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  flex: none;
+}
+
+.glow-btn {
+  background: var(--blue-glow); border: 1px solid rgba(130, 195, 255, 0.45);
+  color: #fff; font-family: inherit; font-size: 13px; font-weight: 700;
+  padding: 7px 14px; border-radius: 14px; display: inline-flex;
+  align-items: center; gap: 7px; cursor: pointer;
+  box-shadow: 0 0 14px rgba(37, 137, 255, 0.4);
+}
+.glow-btn.sm {
+  font-size: 11px;
+  padding: 5px 10px;
+  border-radius: 11px;
+  gap: 5px;
+}
+.glow-btn.danger {
+  background: linear-gradient(135deg, #dc2626, #991b1b);
+  border-color: rgba(252, 165, 165, 0.4);
+  box-shadow: 0 0 12px rgba(220, 38, 38, 0.35);
+}
+
+.stats-wrap { padding: 6px 8px; margin-bottom: 8px; }
+.filter-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px; }
+.pill-input {
+  background: rgba(10, 20, 45, 0.7); border: 1px solid var(--glass-border);
+  border-radius: 10px; padding: 4px 8px; color: #fff; font-family: inherit;
+  font-size: 11px; font-weight: 600; display: flex; align-items: center;
+  justify-content: space-between; width: 100%;
+}
+.pill-input input, .pill-input select {
+  background: transparent; border: 0; color: #fff; font-family: inherit;
+  font-size: 11px; font-weight: 700; width: 100%; outline: none; color-scheme: dark;
+}
+.pill-input select option { background: #0c1733; color: #fff; }
+
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.stat-card {
+  border-radius: 11px; padding: 4px 2px; text-align: center;
+  border: 1px solid rgba(255,255,255,0.22); box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 52px;
+}
+.stat-card svg { width: 15px; height: 15px; }
+.stat-card.g { background: var(--green-card); border-color: rgba(74, 222, 128, 0.5); }
+.stat-card.r { background: var(--red-card); border-color: rgba(248, 113, 113, 0.5); }
+.stat-card.o { background: var(--orange-card); border-color: rgba(251, 191, 36, 0.5); }
+.stat-card.p { background: var(--purple-card); border-color: rgba(167, 139, 250, 0.5); }
+.stat-num { font-size: 15px; font-weight: 800; line-height: 1; margin-bottom: 2px; }
+.stat-lbl { font-size: 9.5px; font-weight: 600; line-height: 1.1; margin-top: 2px; }
+
+.list-wrap { padding: 12px; }
+.list-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.list-title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; }
+.search-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.search-box {
+  flex: 1; background: rgba(10, 20, 45, 0.75); border: 1px solid var(--glass-border);
+  border-radius: 12px; padding: 7px 12px; display: flex; align-items: center; gap: 8px;
+}
+.search-box input {
+  background: transparent; border: 0; color: #fff; font-family: inherit;
+  font-size: 13px; width: 100%; outline: none;
+}
+.search-box input::placeholder { color: var(--mu); }
+.filter-sq {
+  width: 40px; height: 38px; border-radius: 12px; background: rgba(16, 32, 70, 0.8);
+  border: 1px solid var(--glass-border); color: #fff; display: grid; place-items: center; cursor: pointer;
+}
+
+.worker-item {
+  background: rgba(10, 20, 46, 0.72); border: 1px solid rgba(85, 140, 255, 0.25);
+  border-radius: 14px; padding: 8px 12px; margin-bottom: 8px;
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+}
+.w-info { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.avatar {
+  width: 34px; height: 34px; border-radius: 50%; background: var(--blue-glow);
+  border: 1px solid rgba(150, 205, 255, 0.5); display: grid; place-items: center; flex: none;
+}
+.w-name { font-size: 14px; font-weight: 700; }
+.w-loc { font-size: 11px; color: #7dd3fc; font-weight: 700; background: rgba(14, 165, 233, 0.14); border: 1px solid rgba(56, 189, 248, 0.28); padding: 1px 7px; border-radius: 7px; display: inline-block; margin-top: 2px; }
+.sub-txt { font-size: 12px; color: var(--mu); }
+
+.st-pill {
+  padding: 5px 12px; border-radius: 10px; font-size: 12px; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 6px; border: 1px solid transparent;
+  cursor: pointer; font-family: inherit; color: #fff; flex: none;
+}
+.st-pill.p { background: linear-gradient(90deg, #15803d, #22c55e); border-color: #86efac; }
+.st-pill.a { background: linear-gradient(90deg, #b91c1c, #ef4444); border-color: #fca5a5; }
+.st-pill.sick { background: linear-gradient(90deg, #991b1b, #dc2626); border-color: #fca5a5; }
+.st-pill.leave { background: linear-gradient(90deg, #1d4ed8, #3b82f6); border-color: #93c5fd; }
+.st-pill.exc { background: linear-gradient(90deg, #6d28d9, #8b5cf6); border-color: #c4b5fd; }
+.st-pill.duty { background: linear-gradient(90deg, #0369a1, #0ea5e9); border-color: #7dd3fc; }
+.st-pill.none { background: rgba(30, 48, 90, 0.8); border-color: var(--glass-border); color: var(--mu); }
+
+.adm-seg { display: flex; gap: 5px; flex: none; }
+.adm-seg button {
+  padding: 5px 10px; border-radius: 9px; border: 1px solid var(--glass-border);
+  background: rgba(15, 28, 60, 0.8); color: var(--mu); font-family: inherit;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+}
+.adm-seg button.p.on { background: #16a34a; color: #fff; border-color: #86efac; }
+.adm-seg button.a.on { background: #dc2626; color: #fff; border-color: #fca5a5; }
+
+.fab {
+  position: fixed; bottom: 62px; left: 18px; width: 52px; height: 52px;
+  border-radius: 50%; background: var(--blue-glow); border: 1px solid rgba(160, 215, 255, 0.6);
+  color: #fff; font-size: 28px; display: grid; place-items: center;
+  box-shadow: 0 4px 20px rgba(37, 137, 255, 0.6); cursor: pointer; z-index: 20;
+}
+
+.modal-bg {
+  position: fixed; inset: 0; background: rgba(3, 7, 18, 0.8);
+  backdrop-filter: blur(8px); display: grid; place-items: center;
+  padding: 16px; z-index: 50;
+}
+.modal-card {
+  width: 100%; max-width: 400px; background: #0c1733;
+  border: 1px solid var(--glass-border); border-radius: 20px; padding: 16px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6); max-height: 85vh; overflow-y: auto;
+}
+
+.bot-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: rgba(8, 16, 38, 0.92); border-top: 1px solid var(--glass-border);
+  backdrop-filter: blur(16px); z-index: 15;
+}
+.bot-inner {
+  max-width: 520px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr);
+  padding: 3px 4px calc(3px + env(safe-area-inset-bottom, 0px)); gap: 4px;
+}
+.bot-btn {
+  background: transparent; border: 0; color: var(--mu); font-family: inherit;
+  font-size: 10px; font-weight: 700; padding: 4px 2px; border-radius: 11px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer;
+}
+.bot-btn svg { width: 16px; height: 16px; }
+.bot-btn.on {
+  background: var(--blue-glow); color: #fff;
+  box-shadow: 0 0 16px rgba(37, 137, 255, 0.45);
+}
+
+.form-inp {
+  width: 100%; background: rgba(8, 16, 38, 0.85); border: 1px solid var(--glass-border);
+  border-radius: 11px; padding: 9px 12px; color: #fff; font-family: inherit;
+  font-size: 13px; margin-bottom: 8px; outline: none; color-scheme: dark;
+}
+.form-inp option { background: #0c1733; color: #fff; }
+.form-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.del-btn {
+  background: rgba(220, 38, 38, 0.22); border: 1px solid rgba(248, 113, 113, 0.45);
+  color: #fca5a5; border-radius: 9px; padding: 5px 10px; font-family: inherit;
+  font-size: 12px; font-weight: 700; cursor: pointer; flex: none;
+}
+
+.w-loc-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+.mini-sel {
+  background: rgba(14, 165, 233, 0.16);
+  border: 1px solid rgba(56, 189, 248, 0.38);
+  color: #7dd3fc;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 7px;
+  outline: none;
+  cursor: pointer;
+}
+.mini-sel option { background: #0c1733; color: #fff; }
+.edit-icon-btn {
+  background: rgba(148, 163, 184, 0.16);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  color: #cbd5e1;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+/* Custom Emblem with Moving Light Sweep Effect */
+.emblem-wrap {
+  position: relative;
+  width: 58px;
+  height: 68px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  overflow: hidden;
+  border-radius: 14px;
+  filter: drop-shadow(0 4px 12px rgba(251, 191, 36, 0.38));
+}
+.emblem-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+.emblem-wrap::after {
+  content: '';
+  position: absolute;
+  top: -30%;
+  left: -120%;
+  width: 65%;
+  height: 160%;
+  background: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.08) 35%,
+    rgba(255, 248, 210, 0.78) 50%,
+    rgba(255, 255, 255, 0.08) 65%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(22deg);
+  animation: emblem-shine 3.2s ease-in-out infinite;
+  z-index: 2;
+  pointer-events: none;
+}
+@keyframes emblem-shine {
+  0% { left: -120%; }
+  45% { left: 150%; }
+  100% { left: 150%; }
+}
+.group-c-title {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  background: linear-gradient(90deg, #ffffff 0%, #fde68a 40%, #ffffff 60%, #93c5fd 100%);
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: text-shimmer 4s linear infinite;
+}
+@keyframes text-shimmer {
+  0% { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+.offline-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #94a3b8;
+  display: inline-block;
+}
+body.ro .adm { display: none !important; }
+body.locked .app,
+body.locked .fab,
+body.locked .bot-nav { display: none !important; }
+body:not(.locked) #gate-screen { display: none !important; }
+</style>
+</head>
+<body class="locked ro">
+
+<!-- شاشة تسجيل الدخول الإجبارية للزوار والمشرف -->
+<div id="gate-screen" class="gate-wrap">
+  <div class="glass-box gate-card">
+    <div class="gate-head">
+      <h2 class="group-c-title">المجموعة C</h2>
+      <p>يرجى تسجيل الدخول بالبريد الإلكتروني وكلمة السر للمتابعة</p>
+    </div>
+    <form onsubmit="doGateLogin(event)">
+      <input class="form-inp" type="email" id="gate-em" placeholder="البريد الإلكتروني" required autocomplete="email">
+      <input class="form-inp" type="password" id="gate-pw" placeholder="كلمة السر" required autocomplete="current-password">
+      <button type="submit" class="glow-btn" style="width:100%;justify-content:center;padding:10px">تسجيل الدخول</button>
+      <div id="gate-err" style="font-size:12px;color:#fca5a5;text-align:center;margin-top:8px"></div>
+    </form>
+  </div>
+</div>
+
+<div class="app">
+  <!-- Header -->
+  <header class="hdr">
+    <div class="hdr-right">
+      <div class="hdr-title">
+        <h1 class="group-c-title">المجموعة C</h1>
+      </div>
+    </div>
+    <div class="hdr-left" id="hdr-auth"></div>
+  </header>
+
+  <!-- Top 4 Category Tabs -->
+  <nav class="glass-box top-tabs" id="top-tabs"></nav>
+
+  <!-- الشريط الإخباري للزوار ويتحكم فيه المشرف -->
+  <div id="news-ticker-box"></div>
+
+  <!-- Dynamic Content -->
+  <main id="main-view"></main>
+</div>
+
+<!-- Floating Action Button (Admin: Quick Add Employee) -->
+<button class="fab adm" onclick="openAddModal()" title="إضافة موظف جديد">+</button>
+
+<!-- Quick Add Employee Modal -->
+<div class="modal-bg" id="add-modal" style="display:none" onclick="if(event.target===this)closeAddModal()">
+  <div class="modal-card">
+    <div class="list-title" style="margin-bottom:12px">إضافة موظف جديد للفريق</div>
+    <input id="m-name" class="form-inp" placeholder="اكتب اسم الموظف هنا...">
+    <div class="form-row">
+      <div style="flex:1">
+        <label class="sub-txt">مكان العمل</label>
+        <select id="m-loc" class="form-inp" style="margin:4px 0 0" onchange="syncSubLoc('m-loc','m-sub')">
+          <option value="T1">T1</option>
+          <option value="T2">T2</option>
+          <option value="T3">T3</option>
+        </select>
+      </div>
+      <div style="flex:1">
+        <label class="sub-txt">نقطة العمل الداخلية</label>
+        <select id="m-sub" class="form-inp" style="margin:4px 0 0"></select>
+      </div>
+    </div>
+    <div class="form-row" style="margin-bottom:0;margin-top:8px">
+      <button class="glow-btn" style="flex:1;justify-content:center" onclick="saveModalWorker()">إضافة وحفظ</button>
+      <button class="glow-btn danger" style="justify-content:center" onclick="closeAddModal()">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Edit Employee Modal (Admin) -->
+<div class="modal-bg" id="edit-modal" style="display:none" onclick="if(event.target===this)closeEditModal()">
+  <div class="modal-card">
+    <div class="list-title" style="margin-bottom:12px">تعديل بيانات ومكان عمل الموظف</div>
+    <input type="hidden" id="e-id">
+    <label class="sub-txt">اسم الموظف</label>
+    <input id="e-name" class="form-inp" style="margin-top:4px" placeholder="اسم الموظف...">
+    <div class="form-row">
+      <div style="flex:1">
+        <label class="sub-txt">مكان العمل</label>
+        <select id="e-loc" class="form-inp" style="margin:4px 0 0" onchange="syncSubLoc('e-loc','e-sub')">
+          <option value="T1">T1</option>
+          <option value="T2">T2</option>
+          <option value="T3">T3</option>
+        </select>
+      </div>
+      <div style="flex:1">
+        <label class="sub-txt">نقطة العمل الداخلية</label>
+        <select id="e-sub" class="form-inp" style="margin:4px 0 0"></select>
+      </div>
+    </div>
+    <div class="form-row" style="margin-bottom:0;margin-top:10px">
+      <button class="glow-btn" style="flex:1;justify-content:center" onclick="saveEditWorker()">حفظ التعديلات</button>
+      <button class="del-btn" style="padding:7px 12px" onclick="deleteEditWorker()">حذف الموظف</button>
+      <button class="glow-btn danger" style="justify-content:center" onclick="closeEditModal()">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit News Ticker Modal (Admin) -->
+<div class="modal-bg" id="news-modal" style="display:none" onclick="if(event.target===this)closeNewsModal()">
+  <div class="modal-card">
+    <div class="list-title" style="margin-bottom:10px">تعديل الشريط الإخباري</div>
+    <p class="sub-txt" style="margin:0 0 8px">اكتب نص الإعلان أو الخبر الذي سيظهر متحركاً لجميع الزوار:</p>
+    <textarea id="news-inp" class="form-inp" rows="3" placeholder="مثال: مرحباً بالجميع، يرجى الالتزام بمواعيد الحضور..."></textarea>
+    <div class="form-row" style="margin-bottom:0">
+      <button class="glow-btn" style="flex:1;justify-content:center" onclick="saveNews()">حفظ ونشر</button>
+      <button class="glow-btn danger" style="justify-content:center" onclick="closeNewsModal()">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- Online Users Modal (Admin Only) -->
+<div class="modal-bg" id="online-modal" style="display:none" onclick="if(event.target===this)closeOnlineModal()">
+  <div class="modal-card">
+    <div class="list-hdr" style="margin-bottom:10px">
+      <div class="list-title">سجل الاتصال وآخر ظهور</div>
+      <button class="glow-btn sm danger" onclick="closeOnlineModal()">إغلاق</button>
+    </div>
+    <div id="online-list-body"></div>
+  </div>
+</div>
+
+<!-- Bottom Navigation Bar -->
+<nav class="bot-nav">
+  <div class="bot-inner" id="bot-nav"></div>
+</nav>
+
+<script type="application/json" id="data">{"news":"مرحباً بكم في لوحة تسيير الفريق — يتم تحديث الحضور والمداومات بشكل فوري.","people":[{"id":1,"name":"موظف 1","loc":"T1","sub":"PIF"},{"id":2,"name":"موظف 2","loc":"T1","sub":"EDS"},{"id":3,"name":"موظف 3","loc":"T1","sub":"SOUTE"},{"id":4,"name":"موظف 4","loc":"T1","sub":"PIF"},{"id":5,"name":"موظف 5","loc":"T1","sub":"EDS"},{"id":6,"name":"موظف 6","loc":"T2","sub":"PIF"},{"id":7,"name":"موظف 7","loc":"T2","sub":"SOUTE"},{"id":8,"name":"موظف 8","loc":"T2","sub":"PIF"},{"id":9,"name":"موظف 9","loc":"T2","sub":"SOUTE"},{"id":10,"name":"موظف 10","loc":"T2","sub":"PIF"},{"id":11,"name":"موظف 11","loc":"T3","sub":"EDS"},{"id":12,"name":"موظف 12","loc":"T3","sub":"PIF"},{"id":13,"name":"موظف 13","loc":"T3","sub":"SOUTE"},{"id":14,"name":"موظف 14","loc":"T3","sub":"DOMESTIQUE"},{"id":15,"name":"موظف 15","loc":"T3","sub":"DIPLOMATE"}],"att":{"2026-11-20":{"1":"P","2":"P","3":"P","5":"P","6":"P","7":"P","8":"P","9":"P","10":"P","11":"P","12":"P","13":"P","14":"P","15":"P"}},"sick":[{"id":16,"pid":4,"from":"2026-11-20","to":"2026-11-27","note":""}],"leave":[],"exc":[],"duty":[],"next":17}</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getDatabase, ref, set, update, onValue, onDisconnect, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+// =========================================================
+// إعدادات مشروع Firebase وبريد المشرف المعتمد:
+const firebaseConfig = {
+  apiKey: "AIzaSyBzk9TfDpMRhAHS6XUnzmeeDcZv0QJiC_I",
+  authDomain: "group-c-cc519.firebaseapp.com",
+  projectId: "group-c-cc519",
+  storageBucket: "group-c-cc519.firebasestorage.app",
+  messagingSenderId: "1046052527940",
+  appId: "1:1046052527940:web:4467c0dee0191ab4224111",
+  measurementId: "G-SET32HBBRP"
+};
+
+// ضع هنا البريد الإلكتروني الخاص بالمشرف (أي حساب آخر يُعد زائراً للقراءة وإرسال الملاحظات)
+const ADMIN_EMAILS = ["elaroui@dpa.com"];
+// =========================================================
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+const rtdb = firebaseConfig.databaseURL ? getDatabase(app) : getDatabase(app, `https://${firebaseConfig.projectId}-default-rtdb.firebaseio.com`);
+const docRef = doc(db, "team_app", "main_data");
+
+const LOC_ZONES = {
+  T1: ['PIF', 'EDS', 'SOUTE'],
+  T2: ['PIF', 'SOUTE'],
+  T3: ['EDS', 'PIF', 'SOUTE', 'DOMESTIQUE', 'DIPLOMATE']
+};
+
+var OWN = false, LOGGED_IN = false, CURRENT_USER = null;
+var ONLINE_USERS = [];
+var ALL_PRESENCE_USERS = [];
+var unsubscribeData = null;
+var unsubscribePresence = null;
+var S = emb(), topTab = 'att', botTab = 'home', date = td(), flt = 'all', fltSub = 'all', q = '';
+
+var TOP_TABS = [
+  { id: 'att', label: 'الحضور والغياب', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18M9 15l2 2 4-4"/></svg>' },
+  { id: 'sick', label: 'الشواهد المرضية', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M12 11v6M9 14h6"/></svg>' },
+  { id: 'leave', label: 'العطل السنوية', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 8c0-2.76-2.46-5-5.5-5S2 5.24 2 8h2l1-1 1 1h4"/><path d="M13 7.14A5.82 5.82 0 0 1 16.5 6c3.04 0 5.5 2.24 5.5 5h-3l-1-1-1 1h-3"/><path d="M5.89 9.71c-2.15 2.15-2.3 5.47-.35 7.43l4.24-4.25.7-.7.71-.71 2.12-2.12c-1.95-1.96-5.27-1.8-7.42.35z"/><path d="M11 15.5c.5 2.5-.17 4.5-1 6.5h4c2-5.5-.5-12-1-14"/></svg>' },
+  { id: 'exc', label: 'الرخص الإدارية', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>' }
+];
+
+var BOT_TABS = [
+  { id: 'home', label: 'الرئيسية', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>' },
+  { id: 'notes', label: 'ملاحظات', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="13" y2="13"/></svg>' },
+  { id: 'stats', label: 'الإحصائيات', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>' },
+  { id: 'duty', label: 'المداومة', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>' },
+  { id: 'flights', label: 'الرحلات', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>' }
+];
+
+var CFG = {
+  sick: { t: 'الشواهد المرضية', n: 'ملاحظة / رقم الشهادة', lb: 'شهادة مرضية', cls: 'sick' },
+  leave: { t: 'العطل السنوية', n: 'ملاحظة', lb: 'عطلة سنوية', cls: 'leave' },
+  exc: { t: 'الرخص الإدارية والاستثنائية', n: 'السبب (زواج، وفاة، رخصة إدارية…)', lb: 'رخصة إدارية', cls: 'exc' }
+};
+
+function yrOf(d){
+  return (d && String(d).length >= 4) ? String(d).slice(0, 4) : String(new Date().getFullYear());
+}
+
+// تطبيع البيانات وضمان حفظ التعيينات حسب السنة
+function normalizePerson(p){
+  if(p.loc === 'A') p.loc = 'T1';
+  else if(p.loc === 'B') p.loc = 'T2';
+  if(p.loc && !LOC_ZONES[p.loc]) p.loc = '';
+  if(p.loc && (!p.sub || !LOC_ZONES[p.loc].includes(p.sub))){
+    p.sub = LOC_ZONES[p.loc][0];
+  }
+  if(!p.loc) p.sub = '';
+  return p;
+}
+
+function normalizeState(st){
+  st.duty = st.duty || [];
+  st.notes = st.notes || [];
+  st.visitorName = st.visitorName || '';
+  st.flightsCache = st.flightsCache || { airport: 'RBA', updatedAt: '', date: '', list: [] };
+  if(typeof st.news !== 'string') st.news = 'مرحباً بكم في لوحة تسيير الفريق.';
+  (st.people || []).forEach(normalizePerson);
+
+  if(!st.assignByYear || typeof st.assignByYear !== 'object'){
+    st.assignByYear = {};
+    var baseYr = '2026';
+    st.assignByYear[baseYr] = {};
+    (st.people || []).forEach(p => {
+      if(p.loc){
+        st.assignByYear[baseYr][p.id] = { loc: p.loc, sub: p.sub || LOC_ZONES[p.loc][0] };
+      }
+    });
+  }
+  return st;
+}
+
+function getAssign(pid, d){
+  var y = yrOf(d || date);
+  var ym = (S.assignByYear && S.assignByYear[y]) ? S.assignByYear[y] : {};
+  var rec = ym[pid];
+  if(rec && rec.loc && LOC_ZONES[rec.loc]){
+    var sub = (rec.sub && LOC_ZONES[rec.loc].includes(rec.sub)) ? rec.sub : LOC_ZONES[rec.loc][0];
+    return { loc: rec.loc, sub: sub };
+  }
+  return { loc: '', sub: '' };
+}
+
+function setAssign(pid, d, loc, sub){
+  var y = yrOf(d || date);
+  S.assignByYear = S.assignByYear || {};
+  S.assignByYear[y] = S.assignByYear[y] || {};
+  if(!loc || !LOC_ZONES[loc]){
+    delete S.assignByYear[y][pid];
+  } else {
+    var validSub = (sub && LOC_ZONES[loc].includes(sub)) ? sub : LOC_ZONES[loc][0];
+    S.assignByYear[y][pid] = { loc: loc, sub: validSub };
+  }
+  if(y === yrOf(td())){
+    var p = S.people.find(x => x.id == pid);
+    if(p){
+      p.loc = loc || '';
+      p.sub = (loc && LOC_ZONES[loc]) ? ((sub && LOC_ZONES[loc].includes(sub)) ? sub : LOC_ZONES[loc][0]) : '';
+    }
+  }
+}
+
+function td(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function def(){
+  var p=[];
+  var y = yrOf(td());
+  var assign = {};
+  for(var i=1;i<=15;i++){
+    var loc = i<=5?'T1':(i<=10?'T2':'T3');
+    var zones = LOC_ZONES[loc];
+    var sub = zones[(i-1)%zones.length];
+    p.push({id:i, name:'موظف '+i, loc:loc, sub:sub});
+    assign[i] = { loc: loc, sub: sub };
+  }
+  var aby = {}; aby[y] = assign;
+  return normalizeState({news:'مرحباً بكم في لوحة تسيير الفريق.',people:p,assignByYear:aby,att:{},sick:[],leave:[],exc:[],duty:[],notes:[],visitorName:'',next:16});
+}
+function emb(){try{var e=JSON.parse($('data').textContent);if(e&&e.people){e.notes=e.notes||[];return normalizeState(e);}}catch(x){}return def()}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function pn(id){var p=S.people.find(function(x){return x.id==id});return p?p.name:'—'}
+function ploc(id, d){
+  var asg = getAssign(id, d || date);
+  return asg.loc ? (asg.loc + ' · ' + asg.sub) : 'غير معين';
+}
+function days(a,b){return Math.round((new Date(b)-new Date(a))/864e5)+1}
+function stFor(pid,d){for(var k in CFG){var e=S[k].find(function(x){return x.pid==pid&&x.from<=d&&d<=x.to});if(e)return k}return null}
+function $(id){return document.getElementById(id)}
+
+function isAdminUser(user){
+  if(!user || !user.email) return false;
+  var em = user.email.trim().toLowerCase();
+  return ADMIN_EMAILS.map(x => x.trim().toLowerCase()).includes(em);
+}
+
+function startPresence(user){
+  stopPresence();
+  if(!user || !user.uid) return;
+  var safeKey = user.uid;
+  var myPresRef = ref(rtdb, `presence/${safeKey}`);
+  var connectedRef = ref(rtdb, ".info/connected");
+
+  onValue(connectedRef, (snap) => {
+    if (snap.val() === true && auth.currentUser && auth.currentUser.uid === safeKey) {
+      onDisconnect(myPresRef).update({
+        online: false,
+        lastSeen: serverTimestamp()
+      }).catch(() => {});
+      set(myPresRef, {
+        uid: user.uid,
+        email: user.email || '',
+        role: isAdminUser(user) ? 'admin' : 'visitor',
+        online: true,
+        joinedAt: Date.now(),
+        lastSeen: Date.now(),
+        ts: serverTimestamp()
+      }).catch(() => {});
+    }
+  });
+
+  if(isAdminUser(user)){
+    var allPresRef = ref(rtdb, "presence");
+    unsubscribePresence = onValue(allPresRef, (snap) => {
+      var val = snap.val() || {};
+      var arr = Object.values(val).filter(u => u && (u.email || u.uid));
+      arr.sort((a, b) => {
+        if (!!a.online !== !!b.online) return a.online ? -1 : 1;
+        var ta = a.online ? (a.joinedAt || 0) : (a.lastSeen || a.joinedAt || 0);
+        var tb = b.online ? (b.joinedAt || 0) : (b.lastSeen || b.joinedAt || 0);
+        return tb - ta;
+      });
+      ALL_PRESENCE_USERS = arr;
+      ONLINE_USERS = arr.filter(u => u.online);
+      renderAuth();
+      renderOnlineModal();
+    });
+  }
+}
+
+function stopPresence(){
+  if(unsubscribePresence){
+    unsubscribePresence();
+    unsubscribePresence = null;
+  }
+  ONLINE_USERS = [];
+  ALL_PRESENCE_USERS = [];
+}
+
+function startDataSync(){
+  if(unsubscribeData){
+    unsubscribeData();
+    unsubscribeData = null;
+  }
+  unsubscribeData = onSnapshot(docRef, (snap) => {
+    if (snap.exists()) {
+      S = normalizeState(snap.data());
+      render();
+    } else if (OWN) {
+      save();
+    }
+  }, (err) => {
+    console.error("Firestore sync error:", err);
+  });
+}
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    CURRENT_USER = user;
+    LOGGED_IN = true;
+    OWN = isAdminUser(user);
+    document.body.classList.remove("locked");
+    startDataSync();
+    startPresence(user);
+    render();
+  } else {
+    if(CURRENT_USER && CURRENT_USER.uid){
+      try {
+        await update(ref(rtdb, `presence/${CURRENT_USER.uid}`), {
+          online: false,
+          lastSeen: Date.now()
+        });
+      } catch(e){}
+    }
+    stopPresence();
+    if(unsubscribeData){ unsubscribeData(); unsubscribeData = null; }
+    CURRENT_USER = null;
+    LOGGED_IN = false;
+    OWN = false;
+    document.body.classList.add("locked");
+    closeAddModal();
+    closeEditModal();
+    closeNewsModal();
+    closeOnlineModal();
+  }
+});
+
+window.doGateLogin = async function(e){
+  e.preventDefault();
+  var em = $('gate-em').value.trim();
+  var pw = $('gate-pw').value;
+  $('gate-err').textContent = 'جارٍ تسجيل الدخول...';
+  try {
+    await signInWithEmailAndPassword(auth, em, pw);
+    $('gate-err').textContent = '';
+  } catch (err) {
+    $('gate-err').textContent = 'البريد الإلكتروني أو كلمة السر غير صحيحة';
+  }
+};
+
+window.doLogout = async function(){
+  if(CURRENT_USER && CURRENT_USER.uid){
+    try {
+      await update(ref(rtdb, `presence/${CURRENT_USER.uid}`), {
+        online: false,
+        lastSeen: Date.now()
+      });
+    } catch(e){}
+  }
+  await signOut(auth);
+};
+
+window.openOnlineModal = function(){
+  if(!OWN) return;
+  renderOnlineModal();
+  $('online-modal').style.display = 'grid';
+};
+window.closeOnlineModal = function(){
+  var m = $('online-modal');
+  if(m) m.style.display = 'none';
+};
+function formatPresenceTime(ms){
+  if(!ms || typeof ms !== 'number') return 'غير معروف';
+  return formatNoteDateTime(new Date(ms).toISOString());
+}
+function renderOnlineModal(){
+  var body = $('online-list-body');
+  if(!body) return;
+  if(!ALL_PRESENCE_USERS.length){
+    body.innerHTML = '<div class="sub-txt" style="text-align:center;padding:14px">لا يوجد سجل اتصال بعد</div>';
+    return;
+  }
+  body.innerHTML = ALL_PRESENCE_USERS.map(u => {
+    var isOnline = !!u.online;
+    var isAdm = u.role === 'admin';
+    var statusTxt = isOnline
+      ? `<span style="color:#86efac;font-weight:700">متصل الآن</span> · دخل: ${esc(formatPresenceTime(u.joinedAt))}`
+      : `<span style="color:#94a3b8">آخر ظهور:</span> <b style="color:#cbd5e1">${esc(formatPresenceTime(u.lastSeen || u.joinedAt))}</b>`;
+    return `<div class="worker-item">
+      <div style="min-width:0">
+        <div class="w-name" style="word-break:break-all;display:flex;align-items:center;gap:6px">
+          <span class="${isOnline ? 'online-dot' : 'offline-dot'}"></span>
+          <span>${esc(u.email || 'مستخدم')}</span>
+        </div>
+        <div class="sub-txt" style="margin-top:2px">${statusTxt}</div>
+      </div>
+      <span class="role-tag ${isAdm ? 'admin' : 'visitor'}">${isAdm ? 'مشرف' : 'زائر'}</span>
+    </div>`;
+  }).join('');
+}
+
+async function save(){
+  if(!LOGGED_IN) return;
+  try {
+    await setDoc(docRef, JSON.parse(JSON.stringify(S)));
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+window.setTop = function(id){ topTab = id; botTab = 'home'; render(); };
+window.setSub = function(id){ botTab = id; render(); };
+window.setDate = function(v){ date = v || td(); render(); };
+window.setFlt = function(v){
+  flt = v;
+  if(flt === 'all') fltSub = 'all';
+  else if(fltSub !== 'all' && !LOC_ZONES[flt].includes(fltSub)) fltSub = 'all';
+  render();
+};
+window.setFltSub = function(v){ fltSub = v; render(); };
+window.cycleFlt = function(){
+  var order = ['all', 'T1', 'T2', 'T3'];
+  var next = order[(order.indexOf(flt) + 1) % order.length];
+  setFlt(next);
+};
+window.setSearch = function(v){ q = v; renderListOnly(); };
+
+window.syncSubLoc = function(locId, subId){
+  var locVal = $(locId).value;
+  var zones = LOC_ZONES[locVal] || [];
+  $(subId).innerHTML = zones.map(z => `<option value="${z}">${z}</option>`).join('');
+};
+
+// Modal Quick Add Employee
+window.openAddModal = function(){
+  if(!OWN) return;
+  $('m-name').value = '';
+  $('m-loc').value = (flt !== 'all' ? flt : 'T1');
+  syncSubLoc('m-loc', 'm-sub');
+  $('add-modal').style.display = 'grid';
+  setTimeout(() => $('m-name').focus(), 50);
+};
+window.closeAddModal = function(){
+  var m = $('add-modal');
+  if(m) m.style.display = 'none';
+};
+window.saveModalWorker = function(){
+  if(!OWN) return;
+  var n = $('m-name').value.trim();
+  if(!n){ alert('يرجى كتابة اسم الموظف'); return; }
+  var newId = S.next++;
+  var loc = $('m-loc').value;
+  var sub = $('m-sub').value;
+  S.people.push({ id: newId, name: n, loc: loc, sub: sub });
+  setAssign(newId, date, loc, sub);
+  closeAddModal();
+  render();
+  save();
+};
+
+// News Ticker Modal (Admin)
+window.openNewsModal = function(){
+  if(!OWN) return;
+  $('news-inp').value = S.news || '';
+  $('news-modal').style.display = 'grid';
+  setTimeout(() => $('news-inp').focus(), 50);
+};
+window.closeNewsModal = function(){
+  var m = $('news-modal');
+  if(m) m.style.display = 'none';
+};
+window.saveNews = function(){
+  if(!OWN) return;
+  S.news = $('news-inp').value.trim();
+  closeNewsModal();
+  renderNews();
+  save();
+};
+
+function render(){
+  document.body.className = OWN ? '' : 'ro';
+  $('top-tabs').innerHTML = TOP_TABS.map(t =>
+    `<button class="top-tab ${botTab==='home' && topTab===t.id ? 'on' : ''}" onclick="setTop('${t.id}')">${t.icon}<span>${t.label}</span></button>`
+  ).join('');
+
+  $('bot-nav').innerHTML = BOT_TABS.map(t =>
+    `<button class="bot-btn ${botTab===t.id ? 'on' : ''}" onclick="setSub('${t.id}')">${t.icon}<span>${t.label}</span></button>`
+  ).join('');
+
+  renderAuth();
+  renderNews();
+
+  var main = $('main-view');
+  if(botTab === 'notes') main.innerHTML = viewNotes();
+  else if(botTab === 'stats') main.innerHTML = viewStats();
+  else if(botTab === 'duty') main.innerHTML = viewDuty();
+  else if(botTab === 'flights') main.innerHTML = viewFlights();
+  else main.innerHTML = (topTab === 'att') ? viewAtt() : viewLeave(topTab);
+}
+
+function renderNews(){
+  var txt = (S.news || '').trim();
+  if(!txt && !OWN){
+    $('news-ticker-box').innerHTML = '';
+    return;
+  }
+  var displayTxt = txt || 'لا يوجد خبر منشور حالياً (اضغط تعديل لإضافة إعلان)';
+  var speakerIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`;
+  var dur = Math.max(12, Math.min(35, Math.round(displayTxt.length * 0.28)));
+
+  $('news-ticker-box').innerHTML = `
+    <div class="glass-box news-bar">
+      <span class="news-badge">${speakerIcon}<span>أخبار</span></span>
+      <div class="ticker-wrap">
+        <div class="ticker-track" style="animation-duration:${dur}s">${esc(displayTxt)}</div>
+      </div>
+      <button class="news-edit-btn adm" onclick="openNewsModal()">تعديل</button>
+    </div>
+  `;
+}
+
+function isUnavailable(pid, d){
+  return !!stFor(pid, d);
+}
+
+function getFilteredPeople(){
+  return S.people.filter(p => {
+    if(isUnavailable(p.id, date)) return false;
+    var asg = getAssign(p.id, date);
+    var matchLoc = (flt === 'all' || asg.loc === flt);
+    var matchSub = (fltSub === 'all' || asg.sub === fltSub);
+    return matchLoc && matchSub;
+  });
+}
+
+function viewAtt(){
+  var ppl = getFilteredPeople();
+  var a = S.att[date] || {}, pr = 0, ab = 0;
+  ppl.forEach(p => {
+    if(a[p.id] === 'P') pr++;
+    else if(a[p.id] === 'A') ab++;
+  });
+  var lv = S.people.filter(p => {
+    var asg = getAssign(p.id, date);
+    return (flt === 'all' || asg.loc === flt) && (fltSub === 'all' || asg.sub === fltSub) && isUnavailable(p.id, date);
+  }).length;
+  var un = ppl.length - pr - ab;
+
+  // خيارات النقاط الداخلية المتاحة حسب المكان المختار
+  var availableZones = (flt === 'all')
+    ? ['PIF', 'EDS', 'SOUTE', 'DOMESTIQUE', 'DIPLOMATE']
+    : LOC_ZONES[flt];
+
+  return `
+  <div class="glass-box stats-wrap">
+    <div class="filter-row" style="grid-template-columns: 1.15fr 0.9fr 0.95fr; gap: 5px;">
+      <div class="pill-input" style="padding: 4px 6px;">
+        <input type="date" value="${date}" onchange="setDate(this.value)">
+      </div>
+      <div class="pill-input" style="padding: 4px 6px;">
+        <select onchange="setFlt(this.value)">
+          <option value="all" ${flt==='all'?'selected':''}>الكل (${S.people.length})</option>
+          <option value="T1" ${flt==='T1'?'selected':''}>T1 (${S.people.filter(x=>getAssign(x.id,date).loc==='T1').length})</option>
+          <option value="T2" ${flt==='T2'?'selected':''}>T2 (${S.people.filter(x=>getAssign(x.id,date).loc==='T2').length})</option>
+          <option value="T3" ${flt==='T3'?'selected':''}>T3 (${S.people.filter(x=>getAssign(x.id,date).loc==='T3').length})</option>
+        </select>
+      </div>
+      <div class="pill-input" style="padding: 5px 7px;">
+        <select onchange="setFltSub(this.value)">
+          <option value="all" ${fltSub==='all'?'selected':''}>كل النقاط</option>
+          ${availableZones.map(z => `<option value="${z}" ${fltSub===z?'selected':''}>${z}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card g">
+        <div class="stat-num">${pr}</div>
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h11.09a5.97 5.97 0 0 1-.09-1c0-1.66.68-3.16 1.77-4.24C15.39 14.28 13.56 14 12 14zm7.5 1.5L17 18l-1.5-1.5-1.06 1.06L17 20.12l3.56-3.56-1.06-1.06z"/></svg>
+        <div class="stat-lbl">حاضر</div>
+      </div>
+      <div class="stat-card r">
+        <div class="stat-num">${ab}</div>
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h11.09a5.97 5.97 0 0 1-.09-1c0-1.66.68-3.16 1.77-4.24C15.39 14.28 13.56 14 12 14zm8.5 1.56L19.44 14.5 18 15.94l-1.44-1.44-1.06 1.06L16.94 17l-1.44 1.44 1.06 1.06L18 18.06l1.44 1.44 1.06-1.06L19.06 17l1.44-1.44z"/></svg>
+        <div class="stat-lbl">غائب</div>
+      </div>
+      <div class="stat-card o">
+        <div class="stat-num">${lv}</div>
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><circle cx="15" cy="17" r="2.5"/></svg>
+        <div class="stat-lbl">شهادة / عطلة / رخصة</div>
+      </div>
+      <div class="stat-card p">
+        <div class="stat-num">${un}</div>
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="15.5" cy="12" r="1" fill="currentColor"/></svg>
+        <div class="stat-lbl">غير محدد</div>
+      </div>
+    </div>
+
+    <div class="adm" style="margin-top:8px;text-align:center">
+      <button class="glow-btn sm" style="width:100%;justify-content:center;padding:7px" onclick="allP()">تعيين الباقي حاضراً</button>
+    </div>
+  </div>
+
+  <div class="glass-box list-wrap">
+    <div class="list-hdr">
+      <div class="list-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#38bdf8"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        <span>قائمة الموظفين (${ppl.length})</span>
+      </div>
+      <button class="glow-btn sm adm" onclick="openAddModal()">+ إضافة موظف</button>
+    </div>
+    <div class="search-row">
+      <div class="search-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a9d1" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" value="${esc(q)}" oninput="setSearch(this.value)" placeholder="البحث عن موظف...">
+      </div>
+      <button class="filter-sq" onclick="cycleFlt()" title="تبديل مكان العمل (T1 / T2 / T3)">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>
+      </button>
+    </div>
+    <div id="workers-container">${renderWorkersRows()}</div>
+  </div>`;
+}
+
+function renderWorkersRows(){
+  var ppl = getFilteredPeople().filter(p => !q || p.name.includes(q.trim()));
+  var a = S.att[date] || {};
+  if(!ppl.length) return '<div style="text-align:center;color:var(--mu);padding:14px;font-size:13px">لا توجد نتائج مطابقة</div>';
+
+  return ppl.map(p => {
+    var s = stFor(p.id, date);
+    var rightHtml = '';
+    if(s){
+      rightHtml = `<span class="st-pill ${CFG[s].cls}">${CFG[s].lb}</span>`;
+    } else {
+      var v = a[p.id];
+      if(!OWN){
+        if(v === 'P') rightHtml = `<span class="st-pill p">حاضر ✓</span>`;
+        else if(v === 'A') rightHtml = `<span class="st-pill a">غائب ✕</span>`;
+        else rightHtml = `<span class="st-pill none">غير محدد</span>`;
+      } else {
+        rightHtml = `<div class="adm-seg">
+          <button class="p ${v==='P'?'on':''}" onclick="setA(${p.id},'P')">حاضر ✓</button>
+          <button class="a ${v==='A'?'on':''}" onclick="setA(${p.id},'A')">غائب ✕</button>
+        </div>`;
+      }
+    }
+    var curAsg = getAssign(p.id, date);
+    var zones = curAsg.loc ? (LOC_ZONES[curAsg.loc] || []) : [];
+    var locHtml = !OWN
+      ? `<span class="w-loc">${curAsg.loc ? (esc(curAsg.loc) + ' · ' + esc(curAsg.sub)) : 'غير معين'}</span>`
+      : `<div class="w-loc-edit">
+          <select class="mini-sel" onchange="changeWorkerLoc(${p.id}, this.value)" title="تعيين مكان العمل">
+            <option value="" ${!curAsg.loc?'selected':''}>غير معين</option>
+            <option value="T1" ${curAsg.loc==='T1'?'selected':''}>T1</option>
+            <option value="T2" ${curAsg.loc==='T2'?'selected':''}>T2</option>
+            <option value="T3" ${curAsg.loc==='T3'?'selected':''}>T3</option>
+          </select>
+          ${curAsg.loc ? `<select class="mini-sel" onchange="changeWorkerSub(${p.id}, this.value)" title="تعيين نقطة العمل الداخلية">
+            ${zones.map(z => `<option value="${z}" ${curAsg.sub===z?'selected':''}>${z}</option>`).join('')}
+          </select>` : ''}
+          <button class="edit-icon-btn" onclick="openEditModal(${p.id})" title="تعديل الاسم أو حذف الموظف">تعديل</button>
+        </div>`;
+
+    return `<div class="worker-item">
+      <div class="w-info">
+        <div class="avatar"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+        <div>
+          <div class="w-name">${esc(p.name)}</div>
+          ${locHtml}
+        </div>
+      </div>
+      ${rightHtml}
+    </div>`;
+  }).join('');
+}
+
+window.renderListOnly = function(){
+  var el = $('workers-container');
+  if(el) el.innerHTML = renderWorkersRows();
+};
+
+window.changeWorkerLoc = function(id, newLoc){
+  if(!OWN) return;
+  var p = S.people.find(x => x.id == id);
+  if(!p) return;
+  if(!newLoc){
+    setAssign(id, date, '', '');
+  } else if(LOC_ZONES[newLoc]){
+    var cur = getAssign(id, date);
+    var sub = (cur.sub && LOC_ZONES[newLoc].includes(cur.sub)) ? cur.sub : LOC_ZONES[newLoc][0];
+    setAssign(id, date, newLoc, sub);
+  }
+  render(); save();
+};
+
+window.changeWorkerSub = function(id, newSub){
+  if(!OWN) return;
+  var cur = getAssign(id, date);
+  if(!cur.loc) return;
+  setAssign(id, date, cur.loc, newSub);
+  render(); save();
+};
+
+window.openEditModal = function(id){
+  if(!OWN) return;
+  var p = S.people.find(x => x.id == id);
+  if(!p) return;
+  var cur = getAssign(id, date);
+  $('e-id').value = p.id;
+  $('e-name').value = p.name;
+  $('e-loc').value = cur.loc || 'T1';
+  syncSubLoc('e-loc', 'e-sub');
+  if(cur.sub) $('e-sub').value = cur.sub;
+  $('edit-modal').style.display = 'grid';
+};
+
+window.closeEditModal = function(){
+  var m = $('edit-modal');
+  if(m) m.style.display = 'none';
+};
+
+window.saveEditWorker = function(){
+  if(!OWN) return;
+  var id = $('e-id').value;
+  var p = S.people.find(x => x.id == id);
+  if(!p) return;
+  var n = $('e-name').value.trim();
+  if(!n){ alert('يرجى كتابة اسم الموظف'); return; }
+  p.name = n;
+  setAssign(id, date, $('e-loc').value, $('e-sub').value);
+  closeEditModal();
+  render(); save();
+};
+
+window.deleteEditWorker = function(){
+  if(!OWN) return;
+  var id = $('e-id').value;
+  var p = S.people.find(x => x.id == id);
+  var name = p ? p.name : 'هذا الموظف';
+  if(!confirm('هل أنت متأكد من حذف «' + name + '» وجميع سجلاته نهائياً؟')) return;
+  S.people = S.people.filter(x => x.id != id);
+  ['sick', 'leave', 'exc', 'duty'].forEach(k => {
+    S[k] = (S[k] || []).filter(e => e.pid != id);
+  });
+  Object.keys(S.att).forEach(d => {
+    if(S.att[d] && S.att[d][id]) delete S.att[d][id];
+  });
+  if(S.assignByYear){
+    Object.keys(S.assignByYear).forEach(y => {
+      if(S.assignByYear[y] && S.assignByYear[y][id]) delete S.assignByYear[y][id];
+    });
+  }
+  closeEditModal();
+  render(); save();
+};
+
+window.setA = function(id, v){
+  if(!OWN) return;
+  S.att[date] = S.att[date] || {};
+  S.att[date][id] = S.att[date][id] === v ? undefined : v;
+  if(!S.att[date][id]) delete S.att[date][id];
+  render(); save();
+};
+
+window.allP = function(){
+  if(!OWN) return;
+  S.att[date] = S.att[date] || {};
+  getFilteredPeople().forEach(p => {
+    if(!stFor(p.id, date) && !S.att[date][p.id]) S.att[date][p.id] = 'P';
+  });
+  render(); save();
+};
+
+function viewLeave(k){
+  var c = CFG[k];
+  var activeYr = yrOf(date);
+  var yrRecords = (S[k] || []).filter(e => yrOf(e.from) === activeYr || yrOf(e.to) === activeYr);
+  var opts = S.people.map(p => `<option value="${p.id}">${esc(p.name)} (${ploc(p.id, date)})</option>`).join('');
+  var list = yrRecords.slice().sort((a,b) => a.from < b.from ? 1 : -1).map(e => `
+    <div class="worker-item">
+      <div>
+        <div class="w-name">${esc(pn(e.pid))} <span class="w-loc">${esc(ploc(e.pid, e.from))}</span></div>
+        <div class="sub-txt" style="margin-top:3px">${e.from} ← ${e.to} · ${days(e.from, e.to)} يوم ${e.note ? '· ' + esc(e.note) : ''}</div>
+      </div>
+      <button class="del-btn adm" onclick="delE('${k}', ${e.id})">حذف</button>
+    </div>`).join('') || '<div style="color:var(--mu);font-size:13px;text-align:center;padding:12px">لا توجد سجلات لسنة ' + activeYr + '</div>';
+
+  return `
+  <div class="glass-box list-wrap adm">
+    <div class="list-title" style="margin-bottom:10px">إضافة: ${c.t}</div>
+    <select id="fp" class="form-inp">${opts}</select>
+    <div class="form-row">
+      <div style="flex:1"><label class="sub-txt">من تاريخ</label><input type="date" id="ff" class="form-inp" value="${date}"></div>
+      <div style="flex:1"><label class="sub-txt">إلى تاريخ</label><input type="date" id="ft" class="form-inp" value="${date}"></div>
+    </div>
+    <input id="fn" class="form-inp" placeholder="${c.n}">
+    <button class="glow-btn" style="width:100%;justify-content:center" onclick="addE('${k}')">حفظ وإضافة</button>
+  </div>
+  <div class="glass-box list-wrap">
+    <div class="list-hdr" style="margin-bottom:10px">
+      <div class="list-title" style="margin:0">${c.t} (${yrRecords.length})</div>
+      <div class="pill-input" style="width:auto;padding:4px 8px">
+        <input type="date" value="${date}" onchange="setDate(this.value)">
+      </div>
+    </div>
+    ${list}
+  </div>`;
+}
+
+window.addE = function(k){
+  if(!OWN) return;
+  var f = $('ff').value, t = $('ft').value;
+  if(!f || !t || t < f){ alert('يرجى التحقق من التواريخ'); return; }
+  S[k].push({ id: S.next++, pid: +$('fp').value, from: f, to: t, note: $('fn').value.trim() });
+  render(); save();
+};
+
+window.delE = function(k, id){
+  if(!OWN) return;
+  S[k] = S[k].filter(e => e.id != id);
+  render(); save();
+};
+
+function viewDuty(){
+  var activeYr = yrOf(date);
+  var yrDuty = (S.duty || []).filter(d => yrOf(d.date) === activeYr);
+  var opts = S.people.map(p => `<option value="${p.id}">${esc(p.name)} (${ploc(p.id, date)})</option>`).join('');
+  var list = yrDuty.slice().sort((a,b) => a.date < b.date ? 1 : -1).map(d => `
+    <div class="worker-item">
+      <div class="w-info">
+        <div class="avatar"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+        <div>
+          <div class="w-name">${esc(pn(d.pid))} <span class="w-loc">${esc(ploc(d.pid, d.date))}</span></div>
+          <div class="sub-txt" style="margin-top:3px">تاريخ المداومة: <b style="color:#7dd3fc">${esc(d.date)}</b> ${d.note ? '· ' + esc(d.note) : ''}</div>
+        </div>
+      </div>
+      ${OWN
+        ? `<button class="del-btn" onclick="delDuty(${d.id})">حذف</button>`
+        : `<span class="st-pill duty">مداوم</span>`
+      }
+    </div>`).join('') || '<div style="color:var(--mu);font-size:13px;text-align:center;padding:14px">لا توجد مداومات مسجلة لسنة ' + activeYr + '</div>';
+
+  return `
+  <div class="glass-box list-wrap adm">
+    <div class="list-title" style="margin-bottom:10px">تعيين موظف للمداومة</div>
+    <label class="sub-txt">اختر الموظف المداوم</label>
+    <select id="dp" class="form-inp">${opts}</select>
+    <label class="sub-txt">تاريخ المداومة</label>
+    <input type="date" id="dd" class="form-inp" value="${date}">
+    <input id="dn" class="form-inp" placeholder="ملاحظة إضافية (اختياري: ليلية، نهاية الأسبوع...)">
+    <button class="glow-btn" style="width:100%;justify-content:center" onclick="addDuty()">حفظ المداومة</button>
+  </div>
+  <div class="glass-box list-wrap">
+    <div class="list-hdr" style="margin-bottom:10px">
+      <div class="list-title" style="margin:0">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+        <span>جدول المداومة (${yrDuty.length})</span>
+      </div>
+      <div class="pill-input" style="width:auto;padding:4px 8px">
+        <input type="date" value="${date}" onchange="setDate(this.value)">
+      </div>
+    </div>
+    ${list}
+  </div>`;
+}
+
+window.addDuty = function(){
+  if(!OWN) return;
+  var d = $('dd').value;
+  if(!d){ alert('يرجى تحديد تاريخ المداومة'); return; }
+  S.duty = S.duty || [];
+  S.duty.push({ id: S.next++, pid: +$('dp').value, date: d, note: $('dn').value.trim() });
+  render(); save();
+};
+
+window.delDuty = function(id){
+  if(!OWN) return;
+  S.duty = (S.duty || []).filter(x => x.id != id);
+  render(); save();
+};
+
+function formatNoteDateTime(iso){
+  try {
+    var d = new Date(iso);
+    if(isNaN(d.getTime())) return iso || '';
+    var pad = n => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + ' · ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  } catch(x){ return iso || ''; }
+}
+
+function viewNotes(){
+  var senderEmail = (CURRENT_USER && CURRENT_USER.email) ? CURRENT_USER.email : '';
+  var formCard = `<div class="glass-box list-wrap">
+    <div class="list-title" style="margin-bottom:10px">إرسال ملاحظة للمشرف</div>
+    <p class="sub-txt" style="margin:0 0 8px">يمكنك كتابة ملاحظتك هنا وستُرسل مباشرة إلى المشرف باسم حسابك (${esc(senderEmail)}) ولا تظهر لباقي الزوار.</p>
+    <textarea id="note-txt" class="form-inp" rows="3" placeholder="اكتب ملاحظتك هنا..."></textarea>
+    <button class="glow-btn" style="width:100%;justify-content:center" onclick="sendNote()">إرسال الملاحظة</button>
+    <div id="note-msg" class="sub-txt" style="margin-top:8px;text-align:center;color:#4ade80"></div>
+  </div>`;
+
+  if(!OWN){
+    return formCard;
+  }
+
+  var notesList = (S.notes || []).slice().sort((a,b) => (a.createdAt < b.createdAt ? 1 : -1)).map(n => `
+    <div class="worker-item" style="align-items:flex-start">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span class="w-name">${esc(n.author || 'زائر')}</span>
+          <span class="sub-txt">${esc(formatNoteDateTime(n.createdAt))}</span>
+        </div>
+        <div style="margin-top:5px;font-size:13px;line-height:1.5;color:#e2e8f0;white-space:pre-wrap">${esc(n.text)}</div>
+      </div>
+      <button class="del-btn" onclick="delNote(${n.id})">حذف</button>
+    </div>`).join('') || '<div class="sub-txt" style="text-align:center;padding:14px">لا توجد ملاحظات واردة حالياً</div>';
+
+  return formCard + `<div class="glass-box list-wrap">
+    <div class="list-hdr" style="margin-bottom:10px">
+      <div class="list-title">الملاحظات الواردة (${(S.notes||[]).length})</div>
+    </div>
+    ${notesList}
+  </div>`;
+}
+
+window.sendNote = function(){
+  var txtInp = $('note-txt');
+  var author = (CURRENT_USER && CURRENT_USER.email) ? CURRENT_USER.email : 'زائر';
+  var text = txtInp ? txtInp.value.trim() : '';
+  if(!text){ alert('يرجى كتابة نص الملاحظة أولاً'); return; }
+  S.notes = S.notes || [];
+  S.notes.push({
+    id: S.next++,
+    author: author,
+    text: text,
+    createdAt: new Date().toISOString()
+  });
+  if(txtInp) txtInp.value = '';
+  save().then(() => {
+    if(OWN) render();
+    var m = $('note-msg');
+    if(m) m.textContent = 'تم إرسال ملاحظتك للمشرف بنجاح ✓';
+  });
+};
+
+window.delNote = function(id){
+  if(!OWN) return;
+  S.notes = (S.notes || []).filter(n => n.id != id);
+  render(); save();
+};
+
+function isPresentOrAuthorized(pid, d){
+  if(isUnavailable(pid, d)) return false;
+  var a = S.att[d] || {};
+  return a[pid] === 'P';
+}
+
+function formatTimesAr(n){
+  if(n === 1) return 'مرة واحدة';
+  if(n === 2) return 'مرتين';
+  if(n >= 3 && n <= 10) return n + ' مرات';
+  return n + ' مرة';
+}
+
+function safeDays(a, b){
+  if(!a || !b) return 0;
+  var d = Math.round((new Date(b) - new Date(a)) / 864e5) + 1;
+  return isNaN(d) || d < 0 ? 0 : d;
+}
+
+
+const AVIATIONSTACK_KEY = "f6549c1e0e3cd79cb1253a207289966f";
+var FLIGHTS_LOADING = false;
+var FLIGHTS_ERR = "";
+
+function formatFlightTime(isoStr){
+  if(!isoStr) return '--:--';
+  var m = String(isoStr).match(/T(\d{2}:\d{2})/);
+  if(m) return m[1];
+  try {
+    var d = new Date(isoStr);
+    if(!isNaN(d.getTime())){
+      return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    }
+  } catch(e){}
+  return String(isoStr).slice(0, 16);
+}
+
+function translateFlightStatus(st){
+  var s = String(st || '').toLowerCase();
+  if(s === 'scheduled') return { lb: 'مجدولة', cls: 'duty' };
+  if(s === 'active') return { lb: 'في الجو ✈', cls: 'p' };
+  if(s === 'landed') return { lb: 'وصلت ✓', cls: 'p' };
+  if(s === 'delayed') return { lb: 'متأخرة', cls: 'leave' };
+  if(s === 'cancelled') return { lb: 'ملغاة', cls: 'a' };
+  if(s === 'diverted') return { lb: 'محوّلة', cls: 'sick' };
+  return { lb: st || 'مجدولة', cls: 'duty' };
+}
+
+window.refreshRbaFlights = async function(){
+  if(FLIGHTS_LOADING) return;
+  FLIGHTS_LOADING = true;
+  FLIGHTS_ERR = '';
+  render();
+
+  var rawUrl = `http://api.aviationstack.com/v1/flights?access_key=${AVIATIONSTACK_KEY}&dep_iata=RBA&limit=100`;
+  var proxyUrls = [
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(rawUrl)}`,
+    `https://corsproxy.io/?${encodeURIComponent(rawUrl)}`
+  ];
+
+  var payload = null;
+  var lastError = '';
+
+  for(var i = 0; i < proxyUrls.length; i++){
+    try {
+      var res = await fetch(proxyUrls[i], { cache: 'no-store' });
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      var json = await res.json();
+      if(json && json.error){
+        lastError = json.error.message || json.error.code || 'خطأ من خادم الطيران';
+        break;
+      }
+      if(json && Array.isArray(json.data)){
+        payload = json.data;
+        break;
+      }
+    } catch(err){
+      lastError = err && err.message ? err.message : 'تعذر الاتصال بخادم الرحلات';
+    }
+  }
+
+  FLIGHTS_LOADING = false;
+
+  if(!payload){
+    FLIGHTS_ERR = lastError || 'تعذر جلب البيانات حالياً. حاول مجدداً بعد لحظات.';
+    render();
+    return;
+  }
+
+  var mapped = payload.map(f => {
+    var dep = f.departure || {};
+    var arr = f.arrival || {};
+    var al = f.airline || {};
+    var fl = f.flight || {};
+    var sched = dep.scheduled || dep.estimated || '';
+    return {
+      time: formatFlightTime(sched),
+      rawTime: sched,
+      flightNo: fl.iata || fl.icao || fl.number || '—',
+      airline: al.name || 'شركة طيران',
+      toAirport: arr.airport || arr.iata || 'وجهة غير محددة',
+      toIata: arr.iata || '',
+      terminal: dep.terminal || '',
+      gate: dep.gate || '',
+      status: f.flight_status || 'scheduled'
+    };
+  });
+
+  // ترتيب الرحلات تصاعدياً حسب توقيت الإقلاع
+  mapped.sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
+
+  S.flightsCache = {
+    airport: 'RBA',
+    updatedAt: formatNoteDateTime(new Date().toISOString()),
+    date: td(),
+    list: mapped
+  };
+
+  render();
+  save();
+};
+
+function viewFlights(){
+  var cache = S.flightsCache || { airport: 'RBA', updatedAt: '', date: '', list: [] };
+  var flights = Array.isArray(cache.list) ? cache.list : [];
+
+  var rowsHtml = flights.length
+    ? flights.map(f => {
+        var stInfo = translateFlightStatus(f.status);
+        var dest = f.toIata ? `${f.toAirport} (${f.toIata})` : f.toAirport;
+        var extra = [
+          f.airline,
+          f.terminal ? ('مبنى ' + f.terminal) : '',
+          f.gate ? ('بوابة ' + f.gate) : ''
+        ].filter(Boolean).join(' · ');
+
+        return `<div class="worker-item">
+          <div class="w-info">
+            <div class="avatar" style="background:linear-gradient(135deg,#0284c7,#1d4ed8);font-size:12px;font-weight:800;width:46px;border-radius:12px">
+              ${esc(f.time)}
+            </div>
+            <div>
+              <div class="w-name">${esc(dest)} <span class="w-loc">${esc(f.flightNo)}</span></div>
+              <div class="sub-txt" style="margin-top:3px">${esc(extra)}</div>
+            </div>
+          </div>
+          <span class="st-pill ${stInfo.cls}">${esc(stInfo.lb)}</span>
+        </div>`;
+      }).join('')
+    : `<div style="text-align:center;color:var(--mu);padding:18px;font-size:13px">
+        ${FLIGHTS_LOADING ? 'جارٍ جلب رحلات المغادرة من مطار الرباط - سلا (RBA)...' : 'لا توجد رحلات محمّلة بعد. اضغط على زر «تحديث الرحلات الآن» لجلب رحلات الذهاب.'}
+      </div>`;
+
+  return `
+  <div class="glass-box stats-wrap">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px">
+      <div>
+        <div class="list-title" style="margin:0;font-size:14px">مطار الرباط - سلا (RBA) · رحلات الذهاب</div>
+        <div class="sub-txt" style="margin-top:2px">
+          ${cache.updatedAt ? ('آخر تحديث: <b style="color:#7dd3fc">' + esc(cache.updatedAt) + '</b>') : 'لم يتم التحديث بعد'}
+        </div>
+      </div>
+      <span class="st-pill duty" style="font-size:12px;padding:5px 10px">العدد: ${flights.length}</span>
+    </div>
+
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="glow-btn" style="flex:1;justify-content:center" onclick="refreshRbaFlights()" ${FLIGHTS_LOADING ? 'disabled' : ''}>
+        ${FLIGHTS_LOADING ? 'جارٍ التحديث...' : 'تحديث الرحلات الآن ✈'}
+      </button>
+      <a class="glow-btn sm" style="text-decoration:none;display:inline-flex;align-items:center" href="https://www.skyscanner.net/transport/flights-from/rba/" target="_blank" rel="noopener">
+        فتح في Skyscanner ↗
+      </a>
+    </div>
+    ${FLIGHTS_ERR ? `<div style="color:#fca5a5;font-size:11.5px;margin-top:6px;text-align:center">${esc(FLIGHTS_ERR)}</div>` : ''}
+  </div>
+
+  <div class="glass-box list-wrap">
+    <div class="list-title" style="margin-bottom:10px;font-size:14px">جدول رحلات المغادرة وتوقيتها (${flights.length})</div>
+    ${rowsHtml}
+  </div>`;
+}
+
+function viewStats(){
+  var activeYr = yrOf(date);
+  var activePeople = S.people
+    .filter(p => isPresentOrAuthorized(p.id, date))
+    .map(p => ({ p: p, asg: getAssign(p.id, date) }));
+
+  var t1 = activePeople.filter(x => x.asg.loc === 'T1');
+  var t2 = activePeople.filter(x => x.asg.loc === 'T2');
+  var t3 = activePeople.filter(x => x.asg.loc === 'T3');
+
+  function breakdown(arr, loc){
+    return LOC_ZONES[loc].map(z => `${z}: <b>${arr.filter(x=>x.asg.sub===z).length}</b>`).join(' · ');
+  }
+
+  // تجميع إحصائيات العطل السنوية حسب الموظف للسنة المختارة
+  var leavesByPid = {};
+  (S.leave || []).filter(e => yrOf(e.from) === activeYr || yrOf(e.to) === activeYr).forEach(e => {
+    var pid = e.pid;
+    if(!leavesByPid[pid]) leavesByPid[pid] = [];
+    leavesByPid[pid].push(safeDays(e.from, e.to));
+  });
+
+  var beneficiaryIds = Object.keys(leavesByPid);
+  var leaveRowsHtml = beneficiaryIds.length
+    ? beneficiaryIds.map(pid => {
+        var durs = leavesByPid[pid];
+        var dursText = durs.map(d => d + ' ' + (d === 1 ? 'يوم' : 'أيام')).join('، ');
+        return `<div class="worker-item" style="margin-bottom:6px">
+          <div class="w-info">
+            <div class="avatar"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+            <div>
+              <div class="w-name">${esc(pn(pid))}</div>
+              <div class="sub-txt">استفاد ${formatTimesAr(durs.length)} · مدتها: <b style="color:#7dd3fc">${esc(dursText)}</b></div>
+            </div>
+          </div>
+          <span class="st-pill leave">${durs.length}</span>
+        </div>`;
+      }).join('')
+    : '<div class="sub-txt" style="text-align:center;padding:10px">لا يوجد مستفيدون من العطل السنوية لسنة ' + activeYr + '</div>';
+
+  return `<div class="glass-box stats-wrap">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px">
+      <div class="list-title" style="margin:0;font-size:14px">المتواجدون في أماكن العمل</div>
+      <div class="pill-input" style="width:auto;padding:4px 8px">
+        <input type="date" value="${date}" onchange="setDate(this.value)">
+      </div>
+    </div>
+    <div class="stat-grid" style="grid-template-columns:repeat(3, 1fr);margin-bottom:8px">
+      <div class="stat-card g"><div class="stat-num">${t1.length}</div><div class="stat-lbl">مكان T1</div></div>
+      <div class="stat-card o"><div class="stat-num">${t2.length}</div><div class="stat-lbl">مكان T2</div></div>
+      <div class="stat-card p"><div class="stat-num">${t3.length}</div><div class="stat-lbl">مكان T3</div></div>
+    </div>
+    <div class="worker-item" style="flex-direction:column;align-items:flex-start;gap:4px;margin-bottom:0">
+      <div class="w-name" style="font-size:13px">تفاصيل T1: <span class="sub-txt">${breakdown(t1, 'T1')}</span></div>
+      <div class="w-name" style="font-size:13px">تفاصيل T2: <span class="sub-txt">${breakdown(t2, 'T2')}</span></div>
+      <div class="w-name" style="font-size:13px">تفاصيل T3: <span class="sub-txt">${breakdown(t3, 'T3')}</span></div>
+    </div>
+  </div>
+
+  <div class="glass-box list-wrap">
+    <div class="list-hdr" style="margin-bottom:8px">
+      <div class="list-title" style="font-size:14px">إحصائيات العطل السنوية (${activeYr})</div>
+      <span class="st-pill leave">المستفيدون: ${beneficiaryIds.length}</span>
+    </div>
+    ${leaveRowsHtml}
+  </div>
+
+  <div class="glass-box list-wrap adm" style="text-align:center">
+    <div class="sub-txt" style="margin-bottom:8px">مسح كافة بيانات سنة <b>${activeYr}</b> (التعيينات، الحضور، الشواهد، العطل، الرخص والمداومات) وإعادتها إلى الصفر:</div>
+    <button class="glow-btn danger" style="width:100%;justify-content:center;padding:9px" onclick="resetYearData()">إعادة الضبط</button>
+  </div>`;
+}
+
+window.resetYearData = function(){
+  if(!OWN) return;
+  var activeYr = yrOf(date);
+  if(!confirm('تحذير: سيتم مسح جميع بيانات سنة ' + activeYr + ' (تعيين أماكن العمل، الحضور، الشواهد المرضية، العطل السنوية، الرخص الإدارية والمداومات) وإعادة كل شيء إلى الصفر.\n\nهل أنت متأكد من المتابعة؟')) return;
+
+  // 1. مسح تعيينات أماكن العمل للسنة المحددة (يصبح الجميع "غير معين")
+  S.assignByYear = S.assignByYear || {};
+  S.assignByYear[activeYr] = {};
+  if(activeYr === yrOf(td())){
+    S.people.forEach(p => { p.loc = ''; p.sub = ''; });
+  }
+
+  // 2. مسح الحضور والغياب لجميع أيام هذه السنة
+  Object.keys(S.att || {}).forEach(d => {
+    if(yrOf(d) === activeYr) delete S.att[d];
+  });
+
+  // 3. مسح الشواهد المرضية، العطل السنوية، الرخص الإدارية والمداومات الخاصة بهذه السنة
+  ['sick', 'leave', 'exc'].forEach(k => {
+    S[k] = (S[k] || []).filter(e => yrOf(e.from) !== activeYr && yrOf(e.to) !== activeYr);
+  });
+  S.duty = (S.duty || []).filter(d => yrOf(d.date) !== activeYr);
+
+  render();
+  save();
+};
+
+function renderAuth(){
+  if(!LOGGED_IN) return;
+  var emailTxt = (CURRENT_USER && CURRENT_USER.email) ? CURRENT_USER.email : '';
+  var roleBadge = OWN
+    ? `<span class="role-tag admin">مشرف</span>`
+    : `<span class="role-tag visitor">زائر</span>`;
+
+  var onlineBtn = OWN
+    ? `<button class="online-pill" onclick="openOnlineModal()" title="عرض المتصلين الآن"><span class="online-dot"></span><span>متصل الآن (${ONLINE_USERS.length})</span></button>`
+    : '';
+
+  $('hdr-auth').innerHTML = `
+    <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:flex-end">
+      ${onlineBtn}
+      <button class="glow-btn sm danger" onclick="doLogout()">خروج</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:5px">
+      ${roleBadge}
+      <span class="user-badge" title="${esc(emailTxt)}">${esc(emailTxt)}</span>
+    </div>
+  `;
+}
+
+render();
+</script>
+</body>
+</html>
