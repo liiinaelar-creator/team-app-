@@ -975,37 +975,7 @@ body:not(.locked) #gate-screen { display: none !important; }
   gap: 6px;
 }
 
-/* Feature 3: Smart Leave/Sick Return Alert Banner */
-.alert-banner {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.24) 0%, rgba(180, 83, 9, 0.34) 100%);
-  border: 1px solid rgba(251, 191, 36, 0.52);
-  border-radius: 18px;
-  padding: 10px 12px;
-  margin-bottom: 10px;
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-.alert-hdr {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 800;
-  color: #fde68a;
-  margin-bottom: 5px;
-}
-.alert-item {
-  font-size: 12px;
-  line-height: 1.55;
-  color: #fef3c7;
-  padding: 3px 0;
-  border-top: 1px dashed rgba(251, 191, 36, 0.25);
-}
-.alert-item:first-of-type {
-  border-top: 0;
-}
+
 
 /* Green Glow Notification on Notes Icon (No Red Badge, Preserves Bar Height) */
 .bot-btn.has-new-note {
@@ -1429,7 +1399,7 @@ body:not(.locked) #gate-screen { display: none !important; }
   <div class="bot-inner" id="bot-nav"></div>
 </nav>
 
-<script type="application/json" id="data">{"news":"مرحباً بكم في لوحة تسيير الفريق — يتم تحديث الحضور والمداومات بشكل فوري.","people":[{"id":1,"name":"موظف 1","loc":"T1","sub":"PIF"},{"id":2,"name":"موظف 2","loc":"T1","sub":"EDS"},{"id":3,"name":"موظف 3","loc":"T1","sub":"SOUTE"},{"id":4,"name":"موظف 4","loc":"T1","sub":"PIF"},{"id":5,"name":"موظف 5","loc":"T1","sub":"EDS"},{"id":6,"name":"موظف 6","loc":"T2","sub":"PIF"},{"id":7,"name":"موظف 7","loc":"T2","sub":"SOUTE"},{"id":8,"name":"موظف 8","loc":"T2","sub":"PIF"},{"id":9,"name":"موظف 9","loc":"T2","sub":"SOUTE"},{"id":10,"name":"موظف 10","loc":"T2","sub":"PIF"},{"id":11,"name":"موظف 11","loc":"T3","sub":"EDS"},{"id":12,"name":"موظف 12","loc":"T3","sub":"PIF"},{"id":13,"name":"موظف 13","loc":"T3","sub":"SOUTE"},{"id":14,"name":"موظف 14","loc":"T3","sub":"DOMESTIQUE"},{"id":15,"name":"موظف 15","loc":"T3","sub":"DIPLOMATE"}],"att":{"2026-11-20":{"1":"P","2":"P","3":"P","5":"P","6":"P","7":"P","8":"P","9":"P","10":"P","11":"P","12":"P","13":"P","14":"P","15":"P"}},"sick":[{"id":16,"pid":4,"from":"2026-11-20","to":"2026-11-27","note":""}],"leave":[],"exc":[],"duty":[],"next":17}</script>
+<script type="application/json" id="data">{"news":"","people":[],"att":{},"sick":[],"leave":[],"exc":[],"duty":[],"leaveQuota":30,"next":1}</script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
@@ -1453,6 +1423,41 @@ const firebaseConfig = {
 const ADMIN_EMAILS = ["elaroui@dpa.com"];
 // =========================================================
 
+// =========================================================
+// طبقة الحماية المزدوجة: قفل النطاق (Domain Lock) + فحص سلامة الكود (Anti-Tamper)
+// =========================================================
+(function(){
+  var h = (window.location.hostname || '').toLowerCase();
+  var proto = window.location.protocol || '';
+  var isAllowedHost = (
+    proto === 'https:' && (
+      h.endsWith('.github.io') ||
+      h.endsWith('.web.app') ||
+      h.endsWith('.firebaseapp.com')
+    )
+  );
+  var titleEl = document.querySelector('h1.group-c-title');
+  var hasCoreNodes = !!document.getElementById('gate-screen') && !!document.getElementById('main-view') && !!document.getElementById('bot-nav');
+  var intactTitle = titleEl && titleEl.textContent.trim() === 'المجموعة C' && document.title.trim() === 'المجموعة C';
+  var intactAdmin = typeof ADMIN_EMAILS !== 'undefined' && Array.isArray(ADMIN_EMAILS) && ADMIN_EMAILS.length === 1 && ADMIN_EMAILS[0] === 'elaroui@dpa.com';
+
+  if (!isAllowedHost || !hasCoreNodes || !intactTitle || !intactAdmin) {
+    try {
+      document.documentElement.innerHTML = '<head><meta charset="utf-8"><title>خطأ في النظام</title></head><body style="margin:0;background:#040917;color:#fca5a5;font-family:system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;text-align:center;padding:24px;direction:rtl"><div style="max-width:420px;background:rgba(127,29,29,0.28);border:1px solid rgba(248,113,113,0.55);border-radius:18px;padding:24px"><div style="font-size:28px;margin-bottom:8px">⛔</div><h2 style="margin:0 0 8px;font-size:18px;color:#fff">خطأ: نسخة غير مصرح بها أو تم التلاعب بالكود</h2><p style="margin:0;font-size:13px;line-height:1.6;color:#fecaca">تعذر تشغيل التطبيق بسبب تشغيله خارج النطاق الرسمي المعتمد أو تعديل ملفاته الأساسية.</p></div></body>';
+    } catch(e) {}
+    throw new Error('SECURITY_INTEGRITY_VIOLATION');
+  }
+
+  // مراقبة مستمرة ضد أي تعديل برمجي أثناء التشغيل
+  setInterval(function(){
+    var t = document.querySelector('h1.group-c-title');
+    if (!t || t.textContent.trim() !== 'المجموعة C' || !document.getElementById('main-view')) {
+      document.body.innerHTML = '';
+      throw new Error('RUNTIME_TAMPER_DETECTED');
+    }
+  }, 4000);
+})();
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
@@ -1465,7 +1470,7 @@ const LOC_ZONES = {
   T3: ['EDS', 'PIF', 'SOUTE', 'DOMESTIQUE', 'DIPLOMATE']
 };
 
-var OWN = false, LOGGED_IN = false, CURRENT_USER = null;
+var OWN = false, LOGGED_IN = false, CURRENT_USER = null, DATA_LOADED = false;
 var ONLINE_USERS = [];
 var ALL_PRESENCE_USERS = [];
 var unsubscribeData = null;
@@ -1513,7 +1518,7 @@ function normalizeState(st){
   st.notes = st.notes || [];
   st.visitorName = st.visitorName || '';
   if(typeof st.news !== 'string') st.news = 'مرحباً بكم في لوحة تسيير الفريق.';
-  if(!st.leaveQuota || isNaN(Number(st.leaveQuota)) || Number(st.leaveQuota) < 1) st.leaveQuota = 22;
+  if(!st.leaveQuota || isNaN(Number(st.leaveQuota)) || Number(st.leaveQuota) < 1) st.leaveQuota = 30;
   if(!st.shiftAnchor || !/^\d{4}-\d{2}-\d{2}$/.test(st.shiftAnchor)) st.shiftAnchor = '2026-11-01';
   (st.people || []).forEach(normalizePerson);
 
@@ -1562,18 +1567,7 @@ function setAssign(pid, d, loc, sub){
 
 function td(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function def(){
-  var p=[];
-  var y = yrOf(td());
-  var assign = {};
-  for(var i=1;i<=15;i++){
-    var loc = i<=5?'T1':(i<=10?'T2':'T3');
-    var zones = LOC_ZONES[loc];
-    var sub = zones[(i-1)%zones.length];
-    p.push({id:i, name:'موظف '+i, loc:loc, sub:sub});
-    assign[i] = { loc: loc, sub: sub };
-  }
-  var aby = {}; aby[y] = assign;
-  return normalizeState({news:'مرحباً بكم في لوحة تسيير الفريق.',people:p,assignByYear:aby,att:{},sick:[],leave:[],exc:[],duty:[],notes:[],visitorName:'',next:16});
+  return normalizeState({news:'',people:[],assignByYear:{},att:{},sick:[],leave:[],exc:[],duty:[],notes:[],visitorName:'',leaveQuota:30,next:1});
 }
 function emb(){try{var e=JSON.parse($('data').textContent);if(e&&e.people){e.notes=e.notes||[];return normalizeState(e);}}catch(x){}return def()}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
@@ -1604,6 +1598,10 @@ function stFor(pid,d){for(var k in CFG){var e=S[k].find(function(x){return x.pid
 function $(id){return document.getElementById(id)}
 
 async function assertAuthorizedRequest(requireAdmin){
+  var tEl = document.querySelector('h1.group-c-title');
+  if(!tEl || tEl.textContent.trim() !== 'المجموعة C' || ADMIN_EMAILS[0] !== 'elaroui@dpa.com'){
+    throw new Error('TAMPERED_CLIENT_BLOCKED');
+  }
   var u = auth.currentUser;
   if(!u || !LOGGED_IN){
     throw new Error('UNAUTHENTICATED_REQUEST');
@@ -1689,6 +1687,7 @@ function startDataSync(){
   }
   unsubscribeData = onSnapshot(docRef, { includeMetadataChanges: true }, (snap) => {
     if(!auth.currentUser) return;
+    DATA_LOADED = true;
     if (snap.exists()) {
       S = normalizeState(snap.data());
       if(!OWN && botTab === 'notes'){
@@ -1697,6 +1696,9 @@ function startDataSync(){
       render();
     } else if (OWN) {
       save();
+      render();
+    } else {
+      render();
     }
   }, (err) => {
     console.error("Firestore sync error:", err);
@@ -1796,6 +1798,7 @@ onAuthStateChanged(auth, async (user) => {
     CURRENT_USER = null;
     LOGGED_IN = false;
     OWN = false;
+    DATA_LOADED = false;
     var stage = $('gate-stage');
     if (stage) {
       stage.classList.remove("gate-exit");
@@ -2002,6 +2005,13 @@ function render(){
   renderNews();
 
   var main = $('main-view');
+  if(!DATA_LOADED){
+    main.innerHTML = `<div class="glass-box list-wrap" style="text-align:center;padding:32px 16px">
+      <div style="font-size:15px;font-weight:700;color:#7dd3fc;margin-bottom:6px">جارٍ تحميل بيانات الفريق...</div>
+      <div class="sub-txt">يرجى الانتظار لحظة</div>
+    </div>`;
+    return;
+  }
   if(botTab === 'notes') main.innerHTML = viewNotes();
   else if(botTab === 'stats') main.innerHTML = viewStats();
   else if(botTab === 'duty') main.innerHTML = viewDuty();
@@ -2021,6 +2031,7 @@ function render(){
 }
 
 function renderNews(){
+  if(!DATA_LOADED){ $('news-ticker-box').innerHTML = ''; return; }
   var txt = (S.news || '').trim();
   if(!txt && !OWN){
     $('news-ticker-box').innerHTML = '';
@@ -2084,7 +2095,6 @@ function viewAtt(){
     </div>`;
 
   return `
-  ${renderSmartAlerts()}
   <div class="glass-box stats-wrap">
     ${shiftBannerHtml}
     <div class="filter-row" style="grid-template-columns: 1.15fr 0.9fr 0.95fr; gap: 5px;">
@@ -2631,7 +2641,7 @@ function viewStats(){
   }
 
   // تجميع إحصائيات ورصيد العطل السنوية لكل موظف للسنة المختارة (إضافة #3)
-  var quota = Number(S.leaveQuota) || 22;
+  var quota = Number(S.leaveQuota) || 30;
   var leavesByPid = {};
   (S.leave || []).filter(e => yrOf(e.from) === activeYr || yrOf(e.to) === activeYr).forEach(e => {
     var pid = e.pid;
@@ -2724,7 +2734,7 @@ window.closeConfirmModal = function(result){
 window.saveLeaveQuota = function(){
   if(!OWN) return;
   var inp = $('quota-inp');
-  var val = inp ? Number(inp.value) : 22;
+  var val = inp ? Number(inp.value) : 30;
   if(!Number.isInteger(val) || val < 1 || val > 90){
     alert('يرجى إدخال عدد أيام صحيح بين 1 و 90');
     return;
@@ -2979,39 +2989,7 @@ window.markAllNotesRead = function(){
   save();
 };
 
-// =========================================================
-// Feature 3: Smart Leave / Sick Return Alerts Banner
-// =========================================================
-function addDaysStr(dateStr, delta){
-  var parts = String(dateStr).split('-').map(Number);
-  var dt = new Date(parts[0], parts[1] - 1, parts[2] + delta);
-  return dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0');
-}
 
-function renderSmartAlerts(){
-  if(!OWN) return '';
-  var tomorrowStr = addDaysStr(date, 1);
-  var alerts = [];
-  ['sick', 'leave', 'exc'].forEach(k => {
-    (S[k] || []).forEach(e => {
-      if(e.to === date){
-        alerts.push(`تنتهي <b>${CFG[k].lb}</b> للموظف <b>${esc(pn(e.pid))}</b> اليوم (${esc(date)}) ويعود للعمل غداً (${esc(ploc(e.pid, tomorrowStr))}).`);
-      } else if(e.to === tomorrowStr){
-        alerts.push(`تنتهي <b>${CFG[k].lb}</b> للموظف <b>${esc(pn(e.pid))}</b> غداً (${esc(tomorrowStr)}) ويعود للعمل بعد غد.`);
-      } else if(addDaysStr(e.to, 1) === date){
-        alerts.push(`عاد الموظف <b>${esc(pn(e.pid))}</b> اليوم للعمل في <b>${esc(ploc(e.pid, date))}</b> بعد انتهاء <b>${CFG[k].lb}</b>.`);
-      }
-    });
-  });
-  if(!alerts.length) return '';
-  return `<div class="alert-banner">
-    <div class="alert-hdr">
-      <span>🔔 تنبيهات العودة وانتهاء الرخص (${alerts.length})</span>
-      <span style="font-size:10px;opacity:0.85">${esc(date)}</span>
-    </div>
-    ${alerts.map(a => `<div class="alert-item">• ${a}</div>`).join('')}
-  </div>`;
-}
 
 // =========================================================
 // Feature 2: Employee Full Profile Modal
@@ -3069,8 +3047,8 @@ window.openProfileModal = function(pid){
       <div class="prof-stat"><b style="color:#4ade80">${presentDays}</b><span>أيام الحضور</span></div>
       <div class="prof-stat"><b style="color:#f87171">${absentDays}</b><span>أيام الغياب</span></div>
       <div class="prof-stat"><b style="color:#38bdf8">${yrDuty.length}</b><span>عدد المداومات</span></div>
-      <div class="prof-stat"><b style="color:#60a5fa">${leaveTotalDays} / ${(Number(S.leaveQuota)||22)}</b><span>العطلة المستهلكة</span></div>
-      <div class="prof-stat"><b style="color:${((Number(S.leaveQuota)||22) - leaveTotalDays) <= 0 ? '#f87171' : '#34d399'}">${(Number(S.leaveQuota)||22) - leaveTotalDays}</b><span>رصيد العطلة المتبقي</span></div>
+      <div class="prof-stat"><b style="color:#60a5fa">${leaveTotalDays} / ${(Number(S.leaveQuota)||30)}</b><span>العطلة المستهلكة</span></div>
+      <div class="prof-stat"><b style="color:${((Number(S.leaveQuota)||30) - leaveTotalDays) <= 0 ? '#f87171' : '#34d399'}">${(Number(S.leaveQuota)||30) - leaveTotalDays}</b><span>رصيد العطلة المتبقي</span></div>
       <div class="prof-stat"><b style="color:#fca5a5">${sickTotalDays}</b><span>أيام المرض</span></div>
     </div>
     <div class="prof-sec-title">السجل التفصيلي للعطل والرخص والمداومات</div>
