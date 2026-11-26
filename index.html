@@ -1103,6 +1103,144 @@ body:not(.locked) #gate-screen { display: none !important; }
   outline: none;
 }
 
+
+/* Feature #3 (Annual Leave Balance) & Work Shift Calendar (يومية العمل 4 أيام) */
+.cal-btn {
+  background: rgba(14, 165, 233, 0.2);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #7dd3fc;
+  border-radius: 11px;
+  padding: 5px 10px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+.shift-pill {
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.shift-pill.day {
+  background: rgba(14, 165, 233, 0.24);
+  border: 1px solid rgba(56, 189, 248, 0.55);
+  color: #7dd3fc;
+}
+.shift-pill.night {
+  background: rgba(99, 102, 241, 0.26);
+  border: 1px solid rgba(129, 140, 248, 0.58);
+  color: #c7d2fe;
+}
+.shift-pill.rest {
+  background: rgba(148, 163, 184, 0.16);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  color: #cbd5e1;
+}
+
+/* Monthly Work Calendar Grid (matching user's blue-bar mobile calendar style) */
+.wcal-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.wcal-nav-btn {
+  background: rgba(30, 58, 118, 0.55);
+  border: 1px solid rgba(120, 180, 255, 0.35);
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.wcal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 10.5px;
+  font-weight: 800;
+  color: var(--mu);
+  margin-bottom: 6px;
+}
+.wcal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.wcal-cell {
+  aspect-ratio: 1 / 1.05;
+  border-radius: 11px;
+  background: rgba(10, 20, 44, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  padding-bottom: 5px;
+  transition: transform 0.14s ease, border-color 0.18s ease;
+}
+.wcal-cell:active { transform: scale(0.94); }
+.wcal-cell.out { opacity: 0.32; }
+.wcal-cell.sel {
+  border: 1.5px solid #38bdf8;
+  background: rgba(14, 165, 233, 0.22);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+}
+.wcal-num {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f1f5f9;
+  line-height: 1.1;
+}
+.wcal-cell.today .wcal-num {
+  background: #3b82f6;
+  color: #fff;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.75);
+}
+.wcal-sub {
+  font-size: 8.5px;
+  font-weight: 700;
+  margin-top: 1px;
+  line-height: 1;
+}
+/* الخط الأزرق في الأسفل لأيام العمل (مطابق للقطة الشاشة) */
+.wcal-bar {
+  position: absolute;
+  bottom: 3px;
+  left: 14%;
+  right: 14%;
+  height: 3.5px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #0284c7, #38bdf8);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.85);
+}
+.wcal-bar.night {
+  background: linear-gradient(90deg, #3b82f6, #818cf8);
+  box-shadow: 0 0 8px rgba(129, 140, 248, 0.85);
+}
+
 </style>
 </head>
 <body class="locked ro">
@@ -1271,6 +1409,21 @@ body:not(.locked) #gate-screen { display: none !important; }
   </div>
 </div>
 
+
+<!-- Work Shift Calendar Modal (يومية العمل) -->
+<div class="modal-bg" id="wcal-modal" style="display:none" onclick="if(event.target===this)closeWorkCalModal()">
+  <div class="modal-card">
+    <div class="list-hdr" style="margin-bottom:8px">
+      <div class="list-title">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        <span>يومية العمل (نظام التناوب)</span>
+      </div>
+      <button class="glow-btn sm danger" onclick="closeWorkCalModal()">إغلاق</button>
+    </div>
+    <div id="wcal-body"></div>
+  </div>
+</div>
+
 <!-- Bottom Navigation Bar -->
 <nav class="bot-nav">
   <div class="bot-inner" id="bot-nav"></div>
@@ -1317,7 +1470,7 @@ var ONLINE_USERS = [];
 var ALL_PRESENCE_USERS = [];
 var unsubscribeData = null;
 var unsubscribePresence = null;
-var S = emb(), topTab = 'att', botTab = 'home', date = td(), flt = 'all', fltSub = 'all', statFlt = 'all', q = '';
+var S = emb(), topTab = 'att', botTab = 'home', date = td(), calViewMonth = td().slice(0, 7), flt = 'all', fltSub = 'all', statFlt = 'all', q = '';
 
 var TOP_TABS = [
   { id: 'att', label: 'الحضور والغياب', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18M9 15l2 2 4-4"/></svg>' },
@@ -1360,6 +1513,8 @@ function normalizeState(st){
   st.notes = st.notes || [];
   st.visitorName = st.visitorName || '';
   if(typeof st.news !== 'string') st.news = 'مرحباً بكم في لوحة تسيير الفريق.';
+  if(!st.leaveQuota || isNaN(Number(st.leaveQuota)) || Number(st.leaveQuota) < 1) st.leaveQuota = 22;
+  if(!st.shiftAnchor || !/^\d{4}-\d{2}-\d{2}$/.test(st.shiftAnchor)) st.shiftAnchor = '2026-11-01';
   (st.people || []).forEach(normalizePerson);
 
   if(!st.assignByYear || typeof st.assignByYear !== 'object'){
@@ -1918,9 +2073,20 @@ function viewAtt(){
     ? ['PIF', 'EDS', 'SOUTE', 'DOMESTIQUE', 'DIPLOMATE']
     : LOC_ZONES[flt];
 
+  var shInfo = getShiftInfo(date);
+  var shiftBannerHtml = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:6px 10px;border-radius:12px;background:rgba(10,22,52,0.52);border:1px solid ${shInfo.isWork ? 'rgba(56,189,248,0.38)' : 'rgba(148,163,184,0.25)'}">
+      <div style="display:flex;align-items:center;gap:7px">
+        <span class="shift-pill ${shInfo.isWork ? shInfo.code : 'rest'}">${shInfo.icon} ${shInfo.label}</span>
+        <span class="sub-txt" style="font-size:11px">${shInfo.isWork ? 'يوم عمل مبرمج' : 'الفريق في فترة راحة'}</span>
+      </div>
+      <button class="news-edit-btn" style="display:inline-block" onclick="openWorkCalModal()">عرض اليومية ▾</button>
+    </div>`;
+
   return `
   ${renderSmartAlerts()}
   <div class="glass-box stats-wrap">
+    ${shiftBannerHtml}
     <div class="filter-row" style="grid-template-columns: 1.15fr 0.9fr 0.95fr; gap: 5px;">
       <div class="pill-input" style="padding: 4px 6px;">
         <input type="date" value="${date}" onchange="setDate(this.value)">
@@ -2464,7 +2630,8 @@ function viewStats(){
     return LOC_ZONES[loc].map(z => `${z}: <b>${arr.filter(x=>x.asg.sub===z).length}</b>`).join(' · ');
   }
 
-  // تجميع إحصائيات العطل السنوية حسب الموظف للسنة المختارة
+  // تجميع إحصائيات ورصيد العطل السنوية لكل موظف للسنة المختارة (إضافة #3)
+  var quota = Number(S.leaveQuota) || 22;
   var leavesByPid = {};
   (S.leave || []).filter(e => yrOf(e.from) === activeYr || yrOf(e.to) === activeYr).forEach(e => {
     var pid = e.pid;
@@ -2473,22 +2640,25 @@ function viewStats(){
   });
 
   var beneficiaryIds = Object.keys(leavesByPid);
-  var leaveRowsHtml = beneficiaryIds.length
-    ? beneficiaryIds.map(pid => {
-        var durs = leavesByPid[pid];
-        var dursText = durs.map(d => d + ' ' + (d === 1 ? 'يوم' : 'أيام')).join('، ');
+  var leaveRowsHtml = S.people.length
+    ? S.people.map(p => {
+        var durs = leavesByPid[p.id] || [];
+        var used = durs.reduce((a, b) => a + b, 0);
+        var rem = quota - used;
+        var remColor = rem <= 0 ? '#f87171' : (rem <= 5 ? '#fbbf24' : '#4ade80');
+        var dursText = durs.length ? (' · (' + durs.map(d => d + ' ي').join(' + ') + ')') : '';
         return `<div class="worker-item" style="margin-bottom:6px">
           <div class="w-info">
-            <div class="avatar"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+            <div class="avatar w-clickable" onclick="openProfileModal(${p.id})"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
             <div>
-              <div class="w-name">${esc(pn(pid))}</div>
-              <div class="sub-txt">استفاد ${formatTimesAr(durs.length)} · مدتها: <b style="color:#7dd3fc">${esc(dursText)}</b></div>
+              <div class="w-name w-clickable" onclick="openProfileModal(${p.id})">${esc(p.name)}</div>
+              <div class="sub-txt">المستهلك: <b style="color:#93c5fd">${used}</b> من ${quota} يوم${esc(dursText)}</div>
             </div>
           </div>
-          <span class="st-pill leave">${durs.length}</span>
+          <span class="st-pill" style="background:rgba(15,28,60,0.75);border-color:${remColor};color:${remColor}">المتبقي: ${rem} ي</span>
         </div>`;
       }).join('')
-    : '<div class="sub-txt" style="text-align:center;padding:10px">لا يوجد مستفيدون من العطل السنوية لسنة ' + activeYr + '</div>';
+    : '<div class="sub-txt" style="text-align:center;padding:10px">لا يوجد موظفون</div>';
 
   return `<div class="glass-box stats-wrap">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px">
@@ -2511,8 +2681,15 @@ function viewStats(){
 
   <div class="glass-box list-wrap">
     <div class="list-hdr" style="margin-bottom:8px">
-      <div class="list-title" style="font-size:14px">إحصائيات العطل السنوية (${activeYr})</div>
-      <span class="st-pill leave">المستفيدون: ${beneficiaryIds.length}</span>
+      <div class="list-title" style="font-size:14px">رصيد العطل السنوية (${activeYr})</div>
+      <span class="st-pill leave">الرصيد السنوي: ${quota} يوم</span>
+    </div>
+    <div class="adm" style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:rgba(12,26,60,0.45);border:1px solid rgba(120,180,255,0.25);border-radius:12px;padding:6px 10px;margin-bottom:8px">
+      <span class="sub-txt">تحديد الرصيد السنوي الافتراضي (بالأيام):</span>
+      <div style="display:flex;align-items:center;gap:5px">
+        <input type="number" id="quota-inp" min="1" max="90" value="${quota}" class="form-inp" style="width:62px;margin:0;padding:4px 8px;text-align:center">
+        <button class="glow-btn sm" onclick="saveLeaveQuota()">حفظ</button>
+      </div>
     </div>
     ${leaveRowsHtml}
   </div>
@@ -2541,6 +2718,20 @@ window.closeConfirmModal = function(result){
     _confirmResolver = null;
     fn(!!result);
   }
+};
+
+
+window.saveLeaveQuota = function(){
+  if(!OWN) return;
+  var inp = $('quota-inp');
+  var val = inp ? Number(inp.value) : 22;
+  if(!Number.isInteger(val) || val < 1 || val > 90){
+    alert('يرجى إدخال عدد أيام صحيح بين 1 و 90');
+    return;
+  }
+  S.leaveQuota = val;
+  render();
+  save();
 };
 
 window.resetYearData = async function(){
@@ -2584,6 +2775,7 @@ function renderAuth(){
 
   $('hdr-auth').innerHTML = `
     <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:flex-end">
+      <button class="cal-btn" onclick="openWorkCalModal()" title="عرض يومية العمل وأيام الراحة">📅 يومية العمل</button>
       ${onlineBtn}
       <button class="glow-btn sm danger" onclick="doLogout()">خروج</button>
     </div>
@@ -2594,6 +2786,154 @@ function renderAuth(){
   `;
 }
 
+
+
+// =========================================================
+// Work Shift Cycle Engine (4-day cycle: Day -> Night -> Off -> Off)
+// Matching screenshot: 2026-11-01 = Day 0 (Day), 2026-11-02 = Day 1 (Night), 2026-11-03..04 = Off
+// =========================================================
+function parseYMD(ds){
+  var p = String(ds).split('-').map(Number);
+  return Date.UTC(p[0], (p[1]||1) - 1, p[2]||1);
+}
+function getShiftInfo(dateStr){
+  var anchor = (S && S.shiftAnchor) ? S.shiftAnchor : '2026-11-01';
+  var diffDays = Math.round((parseYMD(dateStr) - parseYMD(anchor)) / 86400000);
+  var mod = ((diffDays % 4) + 4) % 4;
+  if(mod === 0) return { code: 'day', isWork: true, label: 'عمل نهاري', short: 'نهار', icon: '☀️' };
+  if(mod === 1) return { code: 'night', isWork: true, label: 'عمل ليلي', short: 'ليل', icon: '🌙' };
+  if(mod === 2) return { code: 'rest1', isWork: false, label: 'يوم راحة (1)', short: 'راحة', icon: '🏠' };
+  return { code: 'rest2', isWork: false, label: 'يوم راحة (2)', short: 'راحة', icon: '🏠' };
+}
+
+window.openWorkCalModal = function(){
+  calViewMonth = (date || td()).slice(0, 7);
+  renderWorkCalModal();
+  $('wcal-modal').style.display = 'grid';
+};
+window.closeWorkCalModal = function(){
+  var m = $('wcal-modal');
+  if(m) m.style.display = 'none';
+};
+window.stepWorkCalMonth = function(delta){
+  var parts = calViewMonth.split('-').map(Number);
+  var dt = new Date(parts[0], (parts[1] - 1) + delta, 1);
+  calViewMonth = dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0');
+  renderWorkCalModal();
+};
+window.pickWorkCalDate = function(ds){
+  date = ds;
+  closeWorkCalModal();
+  render();
+};
+window.saveShiftAnchor = function(){
+  if(!OWN) return;
+  var inp = $('shift-anchor-inp');
+  var val = inp ? safeDateStr(inp.value) : '';
+  if(!val){ alert('يرجى اختيار تاريخ صحيح'); return; }
+  S.shiftAnchor = val;
+  renderWorkCalModal();
+  render();
+  save();
+};
+
+function renderWorkCalModal(){
+  var body = $('wcal-body');
+  if(!body) return;
+  var parts = calViewMonth.split('-').map(Number);
+  var y = parts[0], m = parts[1]; // m is 1..12
+  var monthNames = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  var firstDowMon = (new Date(y, m - 1, 1).getDay() + 6) % 7; // Monday = 0 .. Sunday = 6 (like LUN..DIM in screenshot)
+  var daysInMonth = new Date(y, m, 0).getDate();
+  var prevMonthDays = new Date(y, m - 1, 0).getDate();
+  var todayStr = td();
+
+  var cells = [];
+  // Previous month trailing days
+  for(var i = firstDowMon - 1; i >= 0; i--){
+    var dNum = prevMonthDays - i;
+    var pm = m - 1 < 1 ? 12 : m - 1;
+    var py = m - 1 < 1 ? y - 1 : y;
+    var ds = py + '-' + String(pm).padStart(2,'0') + '-' + String(dNum).padStart(2,'0');
+    cells.push({ ds: ds, num: dNum, out: true });
+  }
+  // Current month days
+  for(var d = 1; d <= daysInMonth; d++){
+    var dsCur = y + '-' + String(m).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    cells.push({ ds: dsCur, num: d, out: false });
+  }
+  // Next month leading days to fill 35 or 42 cells
+  var totalCells = cells.length <= 35 ? 35 : 42;
+  var nextD = 1;
+  while(cells.length < totalCells){
+    var nm = m + 1 > 12 ? 1 : m + 1;
+    var ny = m + 1 > 12 ? y + 1 : y;
+    var dsNext = ny + '-' + String(nm).padStart(2,'0') + '-' + String(nextD).padStart(2,'0');
+    cells.push({ ds: dsNext, num: nextD++, out: true });
+  }
+
+  var workDaysCount = 0;
+  for(var k = 1; k <= daysInMonth; k++){
+    var chk = y + '-' + String(m).padStart(2,'0') + '-' + String(k).padStart(2,'0');
+    if(getShiftInfo(chk).isWork) workDaysCount++;
+  }
+
+  var selInfo = getShiftInfo(date);
+
+  var gridHtml = cells.map(c => {
+    var sh = getShiftInfo(c.ds);
+    var isToday = c.ds === todayStr;
+    var isSel = c.ds === date;
+    var barHtml = sh.isWork
+      ? `<span class="wcal-bar ${sh.code === 'night' ? 'night' : ''}"></span>`
+      : '';
+    var subLbl = sh.isWork
+      ? `<span class="wcal-sub" style="color:${sh.code==='day'?'#7dd3fc':'#a5b4fc'}">${sh.short}</span>`
+      : `<span class="wcal-sub" style="color:#64748b">راحة</span>`;
+    return `<div class="wcal-cell ${c.out?'out':''} ${isToday?'today':''} ${isSel?'sel':''}" onclick="pickWorkCalDate('${c.ds}')">
+      <div class="wcal-num">${c.num}</div>
+      ${subLbl}
+      ${barHtml}
+    </div>`;
+  }).join('');
+
+  var adminCalSettings = OWN ? `
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(120,180,255,0.2)">
+      <div class="sub-txt" style="margin-bottom:5px">ضبط مرجع بداية الدورة (أول يوم عمل نهاري):</div>
+      <div style="display:flex;gap:6px">
+        <input type="date" id="shift-anchor-inp" class="form-inp" style="margin:0;padding:6px 10px" value="${esc(S.shiftAnchor || '2026-11-01')}">
+        <button class="glow-btn sm" onclick="saveShiftAnchor()">تحديث</button>
+      </div>
+    </div>` : '';
+
+  body.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(12,26,60,0.55);border:1px solid rgba(120,180,255,0.28);border-radius:12px;padding:7px 10px;margin-bottom:10px;font-size:12px">
+      <span>حالة <b>${esc(date)}</b>:</span>
+      <span class="shift-pill ${selInfo.isWork ? selInfo.code : 'rest'}">${selInfo.icon} ${selInfo.label}</span>
+    </div>
+
+    <div class="wcal-hdr">
+      <button class="wcal-nav-btn" onclick="stepWorkCalMonth(-1)" title="الشهر السابق">‹</button>
+      <div style="text-align:center">
+        <div style="font-size:15px;font-weight:800">${monthNames[m-1]} ${y}</div>
+        <div class="sub-txt" style="font-size:11px">أيام العمل هذا الشهر: <b style="color:#38bdf8">${workDaysCount}</b> يوم</div>
+      </div>
+      <button class="wcal-nav-btn" onclick="stepWorkCalMonth(1)" title="الشهر التالي">›</button>
+    </div>
+
+    <div class="wcal-weekdays">
+      <div>الإثنين</div><div>الثلاثاء</div><div>الأربعاء</div><div>الخميس</div><div>الجمعة</div><div>السبت</div><div style="color:#f87171">الأحد</div>
+    </div>
+    <div class="wcal-grid">${gridHtml}</div>
+
+    <div style="display:flex;justify-content:space-around;margin-top:10px;font-size:11px;color:var(--mu)">
+      <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:16px;height:3.5px;border-radius:4px;background:#38bdf8;display:inline-block"></span> عمل نهاري</span>
+      <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:16px;height:3.5px;border-radius:4px;background:#818cf8;display:inline-block"></span> عمل ليلي</span>
+      <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:3px;background:rgba(148,163,184,0.25);display:inline-block"></span> يوم راحة</span>
+    </div>
+    ${adminCalSettings}
+  `;
+}
 
 // =========================================================
 // Feature 6: Unread Notes Counter & Mark All Read
@@ -2729,9 +3069,9 @@ window.openProfileModal = function(pid){
       <div class="prof-stat"><b style="color:#4ade80">${presentDays}</b><span>أيام الحضور</span></div>
       <div class="prof-stat"><b style="color:#f87171">${absentDays}</b><span>أيام الغياب</span></div>
       <div class="prof-stat"><b style="color:#38bdf8">${yrDuty.length}</b><span>عدد المداومات</span></div>
-      <div class="prof-stat"><b style="color:#60a5fa">${leaveTotalDays}</b><span>أيام العطلة</span></div>
+      <div class="prof-stat"><b style="color:#60a5fa">${leaveTotalDays} / ${(Number(S.leaveQuota)||22)}</b><span>العطلة المستهلكة</span></div>
+      <div class="prof-stat"><b style="color:${((Number(S.leaveQuota)||22) - leaveTotalDays) <= 0 ? '#f87171' : '#34d399'}">${(Number(S.leaveQuota)||22) - leaveTotalDays}</b><span>رصيد العطلة المتبقي</span></div>
       <div class="prof-stat"><b style="color:#fca5a5">${sickTotalDays}</b><span>أيام المرض</span></div>
-      <div class="prof-stat"><b style="color:#c4b5fd">${excTotalDays}</b><span>رخص إدارية</span></div>
     </div>
     <div class="prof-sec-title">السجل التفصيلي للعطل والرخص والمداومات</div>
     ${recordsHtml || '<div class="sub-txt" style="text-align:center;padding:10px">لا توجد عطل أو رخص أو مداومات مسجلة لهذه السنة</div>'}
