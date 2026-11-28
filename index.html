@@ -1074,6 +1074,75 @@ body:not(.locked) #gate-screen { display: none !important; }
 }
 
 
+/* Section 3 Enhancements: Duty Fairness & Upcoming Duty Alert */
+.duty-alert-box {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.24) 0%, rgba(180, 83, 9, 0.32) 100%);
+  border: 1px solid rgba(250, 204, 21, 0.55);
+  border-radius: 18px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  padding: 9px 12px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  box-shadow: 0 6px 22px rgba(234, 179, 8, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.duty-alert-main {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.duty-alert-ico {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: rgba(250, 204, 21, 0.25);
+  border: 1px solid rgba(253, 224, 71, 0.5);
+  display: grid;
+  place-items: center;
+  flex: none;
+  font-size: 15px;
+}
+.duty-fair-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+.duty-fair-item {
+  background: rgba(10, 22, 52, 0.52);
+  border: 1px solid rgba(120, 180, 255, 0.25);
+  border-radius: 11px;
+  padding: 6px 9px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.duty-fair-item.min-duty {
+  border-color: rgba(74, 222, 128, 0.5);
+  background: rgba(16, 185, 129, 0.14);
+}
+.duty-cnt-badge {
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 8px;
+  background: rgba(14, 165, 233, 0.2);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #7dd3fc;
+  white-space: nowrap;
+}
+.duty-fair-item.min-duty .duty-cnt-badge {
+  background: rgba(34, 197, 94, 0.22);
+  border-color: rgba(74, 222, 128, 0.55);
+  color: #86efac;
+}
+
 /* Feature #3 (Annual Leave Balance) & Work Shift Calendar (يومية العمل 4 أيام) */
 .cal-btn {
   background: rgba(14, 165, 233, 0.2);
@@ -1270,6 +1339,7 @@ body:not(.locked) #gate-screen { display: none !important; }
 
   <!-- الشريط الإخباري للزوار ويتحكم فيه المشرف -->
   <div id="news-ticker-box"></div>
+  <div id="duty-alert-banner"></div>
 
   <!-- Dynamic Content -->
   <main id="main-view"></main>
@@ -1976,6 +2046,7 @@ window.saveNews = function(){
   S.news = sanitizeText($('news-inp').value, 300);
   closeNewsModal();
   renderNews();
+  renderDutyBanner();
   save();
 };
 
@@ -2392,10 +2463,109 @@ window.delE = function(k, id){
   render(); save();
 };
 
+function tomorrowStr(){
+  var d = new Date();
+  d.setDate(d.getDate() + 1);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function getDutyStatsByPerson(yr, ymPrefix){
+  var map = {};
+  (S.people || []).forEach(p => { map[p.id] = { yrCount: 0, moCount: 0 }; });
+  (S.duty || []).forEach(d => {
+    if(!map[d.pid]) return;
+    if(yrOf(d.date) === yr) map[d.pid].yrCount++;
+    if(ymPrefix && String(d.date).startsWith(ymPrefix)) map[d.pid].moCount++;
+  });
+  return map;
+}
+
+function renderDutyBanner(){
+  var box = $('duty-alert-banner');
+  if(!box) return;
+  if(!DATA_LOADED){ box.innerHTML = ''; return; }
+  var today = td();
+  var tmr = tomorrowStr();
+  var todayDuties = (S.duty || []).filter(d => d.date === today);
+  var tmrDuties = (S.duty || []).filter(d => d.date === tmr);
+
+  if(!todayDuties.length && !tmrDuties.length){
+    box.innerHTML = '';
+    return;
+  }
+
+  var parts = [];
+  if(todayDuties.length){
+    var namesToday = todayDuties.map(d => '<b>' + esc(pn(d.pid)) + '</b>').join('، ');
+    parts.push(`<div>⏰ <b>مداومة اليوم (${today}):</b> ${namesToday}</div>`);
+  }
+  if(tmrDuties.length){
+    var namesTmr = tmrDuties.map(d => '<b>' + esc(pn(d.pid)) + '</b>').join('، ');
+    parts.push(`<div style="margin-top:${todayDuties.length?'3px':'0'}">🔔 <b>مداومة الغد (${tmr}):</b> ${namesTmr}</div>`);
+  }
+
+  box.innerHTML = `
+    <div class="duty-alert-box">
+      <div class="duty-alert-main">
+        <div class="duty-alert-ico">⏱</div>
+        <div style="font-size:12px;line-height:1.45;color:#fef9c3">${parts.join('')}</div>
+      </div>
+      <button class="news-edit-btn" style="display:inline-block;border-color:rgba(250,204,21,0.5);color:#fde047;background:rgba(234,179,8,0.2)" onclick="setSub('duty')">الجدول</button>
+    </div>
+  `;
+}
+
+window.pickSuggestedDutyPerson = function(pid){
+  var sel = $('dp');
+  if(sel){
+    sel.value = String(pid);
+    sel.focus();
+  }
+};
+
 function viewDuty(){
   var activeYr = yrOf(date);
+  var activeYm = String(date || td()).slice(0, 7);
   var yrDuty = (S.duty || []).filter(d => yrOf(d.date) === activeYr);
-  var opts = S.people.map(p => `<option value="${p.id}">${esc(p.name)} (${ploc(p.id, date)})</option>`).join('');
+  var dutyStats = getDutyStatsByPerson(activeYr, activeYm);
+
+  // ترتيب الموظفين حسب الأقل مداومة لتحقيق العدالة (الأقل في السنة ثم الأقل في الشهر)
+  var sortedForFairness = (S.people || []).slice().sort((a, b) => {
+    var sa = dutyStats[a.id] || { yrCount: 0, moCount: 0 };
+    var sb = dutyStats[b.id] || { yrCount: 0, moCount: 0 };
+    if(sa.yrCount !== sb.yrCount) return sa.yrCount - sb.yrCount;
+    if(sa.moCount !== sb.moCount) return sa.moCount - sb.moCount;
+    return a.name.localeCompare(b.name, 'ar');
+  });
+
+  var minYrCount = sortedForFairness.length
+    ? (dutyStats[sortedForFairness[0].id] ? dutyStats[sortedForFairness[0].id].yrCount : 0)
+    : 0;
+
+  var opts = sortedForFairness.map(p => {
+    var st = dutyStats[p.id] || { yrCount: 0, moCount: 0 };
+    return `<option value="${p.id}">${esc(p.name)} (${ploc(p.id, date)}) — [السنة: ${st.yrCount} | الشهر: ${st.moCount}]</option>`;
+  }).join('');
+
+  var fairnessHtml = sortedForFairness.length
+    ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(120,180,255,0.2)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span class="sub-txt" style="font-weight:700;color:#93c5fd">⚖️ عدالة توزيع المداومات (${activeYr}):</span>
+          <span class="sub-txt" style="font-size:10.5px;color:#86efac">الأقل مداومة مميز بالأخضر</span>
+        </div>
+        <div class="duty-fair-grid">
+          ${sortedForFairness.map(p => {
+            var st = dutyStats[p.id] || { yrCount: 0, moCount: 0 };
+            var isMin = st.yrCount === minYrCount;
+            return `<div class="duty-fair-item ${isMin ? 'min-duty' : ''}" style="${OWN ? 'cursor:pointer' : ''}" ${OWN ? `onclick="pickSuggestedDutyPerson(${p.id})" title="اضغط لاختياره للمداومة"` : ''}>
+              <span style="font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.name)}</span>
+              <span class="duty-cnt-badge" title="مداومات السنة / مداومات الشهر">${st.yrCount} س · ${st.moCount} ش</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`
+    : '';
+
   var list = yrDuty.slice().sort((a,b) => a.date < b.date ? 1 : -1).map(d => `
     <div class="worker-item">
       <div class="w-info">
@@ -2414,12 +2584,13 @@ function viewDuty(){
   return `
   <div class="glass-box list-wrap adm">
     <div class="list-title" style="margin-bottom:10px">تعيين موظف للمداومة</div>
-    <label class="sub-txt">اختر الموظف المداوم</label>
+    <label class="sub-txt">اختر الموظف المداوم (مرتبون من الأقل مداومة للأكثر)</label>
     <select id="dp" class="form-inp">${opts}</select>
     <label class="sub-txt">تاريخ المداومة</label>
     <input type="date" id="dd" class="form-inp" value="${date}">
     <input id="dn" class="form-inp" placeholder="ملاحظة إضافية (اختياري: ليلية، نهاية الأسبوع...)">
     <button class="glow-btn" style="width:100%;justify-content:center" onclick="addDuty()">حفظ المداومة</button>
+    ${fairnessHtml}
   </div>
   <div class="glass-box list-wrap">
     <div class="list-hdr" style="margin-bottom:10px">
@@ -2431,6 +2602,7 @@ function viewDuty(){
         <input type="date" value="${date}" onchange="setDate(this.value)">
       </div>
     </div>
+    ${!OWN ? fairnessHtml : ''}
     ${list}
   </div>`;
 }
